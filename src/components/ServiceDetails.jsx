@@ -10,13 +10,24 @@ import {
   faServer,
   faEye,
   faEyeSlash,
-  faKey
+  faKey,
+  faChevronDown,
+  faChevronUp
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../context/AuthContext';
 
 const ServiceDetails = ({ vm, serviceTypes }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const [expandedServices, setExpandedServices] = useState({});
   const { isAdmin } = useAuth();
+
+  // Toggle service expansion
+  const toggleServiceExpand = (serviceId) => {
+    setExpandedServices(prev => ({
+      ...prev,
+      [serviceId]: !prev[serviceId]
+    }));
+  };
 
   // Function to get the appropriate icon for a service
   const getServiceIcon = (serviceName) => {
@@ -87,9 +98,12 @@ const ServiceDetails = ({ vm, serviceTypes }) => {
           <h5 className="mb-0">VM Details: {vm.hostname}</h5>
         </Card.Header>
         <Card.Body>
-          <Row>
-            <Col md={4}>
-              <h6>Basic Information</h6>
+          {/* Basic Information Section */}
+          <Card className="mb-4">
+            <Card.Header>
+              <h6 className="mb-0">Basic Information</h6>
+            </Card.Header>
+            <Card.Body>
               <Table size="sm" bordered>
                 <tbody>
                   <tr>
@@ -121,61 +135,83 @@ const ServiceDetails = ({ vm, serviceTypes }) => {
                   </tr>
                 </tbody>
               </Table>
-            </Col>
-            <Col md={8}>
-              <h6>Installed Services</h6>
+            </Card.Body>
+          </Card>
+
+          {/* Installed Services Section */}
+          <Card>
+            <Card.Header>
+              <h6 className="mb-0">Installed Services</h6>
+            </Card.Header>
+            <Card.Body>
               {vm.services.length === 0 ? (
                 <p className="text-muted">No services installed</p>
               ) : (
-                vm.services.map((service) => (
-                  <Card className="mb-3" key={service.id}>
-                    <Card.Header className="d-flex align-items-center">
-                      <FontAwesomeIcon
-                        icon={getServiceIcon(service.name)}
-                        className="me-2 text-primary"
-                      />
-                      <span>{service.name}</span>
-                    </Card.Header>
-                    <Card.Body>
-                      {!service.properties ? (
-                        <Alert variant="warning">
-                          No properties found for this service.
-                        </Alert>
-                      ) : (
-                        <Table size="sm" bordered>
-                          <tbody>
-                            {Object.entries(service.properties).map(([key, value]) => {
-                              // Find the label for this property
-                              const serviceType = serviceTypes.find(type => type.name === service.name);
+                <div className="service-accordion">
+                  {vm.services.map((service) => (
+                    <Card className="mb-3 service-card" key={service.id}>
+                      <Card.Header
+                        className="d-flex justify-content-between align-items-center"
+                        onClick={() => toggleServiceExpand(service.id)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <div className="d-flex align-items-center">
+                          <FontAwesomeIcon
+                            icon={getServiceIcon(service.name)}
+                            className="me-2 text-primary"
+                          />
+                          <span>{service.name}</span>
+                        </div>
+                        <Button variant="link" className="p-0">
+                          <FontAwesomeIcon
+                            icon={expandedServices[service.id] ? faChevronUp : faChevronDown}
+                          />
+                        </Button>
+                      </Card.Header>
 
-                              // Get property fields, handling both naming conventions
-                              const propertyFields = serviceType?.property_fields || serviceType?.propertyFields;
+                      {expandedServices[service.id] && (
+                        <Card.Body>
+                          {!service.properties ? (
+                            <Alert variant="warning">
+                              No properties found for this service.
+                            </Alert>
+                          ) : (
+                            <Table size="sm" bordered>
+                              <tbody>
+                                {Object.entries(service.properties).map(([key, value]) => {
+                                  // Find the label for this property
+                                  const serviceType = serviceTypes.find(type => type.name === service.name);
 
-                              // Find the matching field and get its label
-                              let label = key;
-                              if (propertyFields && Array.isArray(propertyFields)) {
-                                const field = propertyFields.find(field => field.name === key);
-                                if (field && field.label) {
-                                  label = field.label;
-                                }
-                              }
+                                  // Get property fields, handling both naming conventions
+                                  const propertyFields = serviceType?.property_fields || serviceType?.propertyFields;
 
-                              return (
-                                <tr key={key}>
-                                  <th>{label}</th>
-                                  <td>{renderPropertyValue(key, value, true)}</td>
-                                </tr>
-                              );
-                            })}
-                        </tbody>
-                      </Table>
+                                  // Find the matching field and get its label
+                                  let label = key;
+                                  if (propertyFields && Array.isArray(propertyFields)) {
+                                    const field = propertyFields.find(field => field.name === key);
+                                    if (field && field.label) {
+                                      label = field.label;
+                                    }
+                                  }
+
+                                  return (
+                                    <tr key={key}>
+                                      <th>{label}</th>
+                                      <td>{renderPropertyValue(key, value, true)}</td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </Table>
+                          )}
+                        </Card.Body>
                       )}
-                    </Card.Body>
-                  </Card>
-                ))
+                    </Card>
+                  ))}
+                </div>
               )}
-            </Col>
-          </Row>
+            </Card.Body>
+          </Card>
         </Card.Body>
       </Card>
     </div>
