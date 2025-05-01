@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Card, Row, Col, Table, Badge, Button, Alert } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import OSBadge from './OSBadge';
 import {
   faDatabase,
   faCloud,
@@ -116,7 +117,7 @@ const ServiceDetails = ({ vm, serviceTypes }) => {
                   </tr>
                   <tr>
                     <th>Operating System</th>
-                    <td>{vm.os || 'Linux'}</td>
+                    <td><OSBadge os={vm.os} /></td>
                   </tr>
                 </tbody>
               </Table>

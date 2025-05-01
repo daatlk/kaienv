@@ -14,6 +14,8 @@ import {
   faCheck,
   faSpinner
 } from '@fortawesome/free-solid-svg-icons';
+import OSBadge from './OSBadge';
+import ServiceBadge from './ServiceBadge';
 import VMModal from './VMModal';
 import ServiceDetails from './ServiceDetails';
 import LoadingSpinner from './LoadingSpinner';
@@ -185,10 +187,12 @@ const Dashboard = ({
                     {vm.hostname}
                   </td>
                   <td>{vm.ipAddress}</td>
-                  <td>{vm.os || 'Linux'}</td>
+                  <td><OSBadge os={vm.os} /></td>
                   <td>{vm.adminUser}</td>
                   <td>
-                    {vm.services.map(service => service.name).join(', ')}
+                    {vm.services.map(service => (
+                      <ServiceBadge key={service.id} name={service.name} />
+                    ))}
                   </td>
                   <td>
                     {isAdmin() ? (

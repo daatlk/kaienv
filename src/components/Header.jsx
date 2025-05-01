@@ -22,7 +22,7 @@ const Header = () => {
   };
 
   return (
-    <Navbar bg="dark" variant="dark" expand="lg">
+    <Navbar expand="lg" className="navbar">
       <Container>
         <Navbar.Brand as={Link} to="/dashboard">
           <FontAwesomeIcon icon={faServer} className="me-2" />
