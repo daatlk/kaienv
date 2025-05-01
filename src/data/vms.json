@@ -1,0 +1,113 @@
+{
+  "vms": [
+    {
+      "id": 1,
+      "hostname": "vm-db-prod01",
+      "ipAddress": "192.168.1.10",
+      "adminUser": "admin",
+      "adminPassword": "securePassword123",
+      "services": [
+        {
+          "id": 1,
+          "name": "DB",
+          "properties": {
+            "dbType": "Oracle",
+            "version": "19c",
+            "port": 1521,
+            "sid": "PROD",
+            "dataFilePath": "/opt/oracle/data"
+          }
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "hostname": "vm-app-prod01",
+      "ipAddress": "192.168.1.20",
+      "adminUser": "admin",
+      "adminPassword": "securePassword456",
+      "services": [
+        {
+          "id": 1,
+          "name": "IFS Cloud",
+          "properties": {
+            "version": "22R2",
+            "port": 8080,
+            "deploymentPath": "/opt/ifs/cloud",
+            "jvmMemory": "8GB"
+          }
+        },
+        {
+          "id": 2,
+          "name": "IFS Management Server",
+          "properties": {
+            "version": "10.5",
+            "port": 8443,
+            "configPath": "/opt/ifs/mgmt/config"
+          }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "hostname": "vm-mig-prod01",
+      "ipAddress": "192.168.1.30",
+      "adminUser": "admin",
+      "adminPassword": "securePassword789",
+      "services": [
+        {
+          "id": 1,
+          "name": "KaiMig",
+          "properties": {
+            "version": "3.2",
+            "configPath": "/opt/kaimig/config",
+            "logPath": "/var/log/kaimig",
+            "scheduledJobs": ["daily-sync", "weekly-backup"]
+          }
+        }
+      ]
+    }
+  ],
+  "serviceTypes": [
+    {
+      "id": 1,
+      "name": "DB",
+      "propertyFields": [
+        {"name": "dbType", "label": "Database Type", "type": "text"},
+        {"name": "version", "label": "Version", "type": "text"},
+        {"name": "port", "label": "Port", "type": "number"},
+        {"name": "sid", "label": "SID/Database Name", "type": "text"},
+        {"name": "dataFilePath", "label": "Data File Path", "type": "text"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "IFS Cloud",
+      "propertyFields": [
+        {"name": "version", "label": "Version", "type": "text"},
+        {"name": "port", "label": "Port", "type": "number"},
+        {"name": "deploymentPath", "label": "Deployment Path", "type": "text"},
+        {"name": "jvmMemory", "label": "JVM Memory", "type": "text"}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "IFS Management Server",
+      "propertyFields": [
+        {"name": "version", "label": "Version", "type": "text"},
+        {"name": "port", "label": "Port", "type": "number"},
+        {"name": "configPath", "label": "Configuration Path", "type": "text"}
+      ]
+    },
+    {
+      "id": 4,
+      "name": "KaiMig",
+      "propertyFields": [
+        {"name": "version", "label": "Version", "type": "text"},
+        {"name": "configPath", "label": "Configuration Path", "type": "text"},
+        {"name": "logPath", "label": "Log Path", "type": "text"},
+        {"name": "scheduledJobs", "label": "Scheduled Jobs", "type": "array"}
+      ]
+    }
+  ]
+}

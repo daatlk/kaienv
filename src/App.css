@@ -1,0 +1,48 @@
+body {
+  background-color: #f8f9fa;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.navbar-brand {
+  font-weight: 600;
+}
+
+.table th {
+  background-color: #f8f9fa;
+}
+
+.card {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.btn-link {
+  color: #6c757d;
+  padding: 0;
+}
+
+.btn-link:hover {
+  color: #343a40;
+}
+
+/* Service icons */
+.service-icon {
+  font-size: 1.2rem;
+  margin-right: 0.5rem;
+}
+
+/* Password field */
+.password-field {
+  font-family: monospace;
+  letter-spacing: 0.2em;
+}
