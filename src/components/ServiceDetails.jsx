@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Card, Row, Col, Table, Badge, Button, Alert } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import OSBadge from './OSBadge';
+import CopyButton from './CopyButton';
 import {
   faDatabase,
   faCloud,
@@ -108,15 +109,24 @@ const ServiceDetails = ({ vm, serviceTypes }) => {
                 <tbody>
                   <tr>
                     <th>Hostname</th>
-                    <td>{vm.hostname}</td>
+                    <td className="field-with-copy">
+                      <span className="field-content">{vm.hostname}</span>
+                      <CopyButton text={vm.hostname} />
+                    </td>
                   </tr>
                   <tr>
                     <th>IP Address</th>
-                    <td>{vm.ipAddress}</td>
+                    <td className="field-with-copy">
+                      <span className="field-content">{vm.ipAddress}</span>
+                      <CopyButton text={vm.ipAddress} />
+                    </td>
                   </tr>
                   <tr>
                     <th>Admin User</th>
-                    <td>{vm.adminUser}</td>
+                    <td className="field-with-copy">
+                      <span className="field-content">{vm.adminUser}</span>
+                      <CopyButton text={vm.adminUser} />
+                    </td>
                   </tr>
                   <tr>
                     <th>
@@ -125,8 +135,11 @@ const ServiceDetails = ({ vm, serviceTypes }) => {
                         Admin Password
                       </div>
                     </th>
-                    <td>
-                      {renderPropertyValue('adminPassword', vm.adminPassword)}
+                    <td className="field-with-copy">
+                      <span className="field-content">
+                        {renderPropertyValue('adminPassword', vm.adminPassword)}
+                      </span>
+                      <CopyButton text={vm.adminPassword} />
                     </td>
                   </tr>
                   <tr>
@@ -194,10 +207,31 @@ const ServiceDetails = ({ vm, serviceTypes }) => {
                                     }
                                   }
 
+                                  // Determine if this field should have a copy button
+                                  const shouldHaveCopyButton =
+                                    key.toLowerCase().includes('password') ||
+                                    key.toLowerCase().includes('user') ||
+                                    key.toLowerCase().includes('host') ||
+                                    key.toLowerCase().includes('url') ||
+                                    key.toLowerCase().includes('connection') ||
+                                    key.toLowerCase().includes('port') ||
+                                    key.toLowerCase().includes('ip') ||
+                                    key.toLowerCase().includes('address') ||
+                                    key.toLowerCase().includes('key');
+
                                   return (
                                     <tr key={key}>
                                       <th>{label}</th>
-                                      <td>{renderPropertyValue(key, value, true)}</td>
+                                      {shouldHaveCopyButton ? (
+                                        <td className="field-with-copy">
+                                          <span className="field-content">
+                                            {renderPropertyValue(key, value, true)}
+                                          </span>
+                                          <CopyButton text={value.toString()} />
+                                        </td>
+                                      ) : (
+                                        <td>{renderPropertyValue(key, value, true)}</td>
+                                      )}
                                     </tr>
                                   );
                                 })}

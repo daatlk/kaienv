@@ -482,6 +482,41 @@ p {
   border-radius: var(--border-radius-sm);
 }
 
+/* Copy button */
+.copy-button {
+  margin-left: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.copy-button.copied {
+  background-color: var(--success);
+  border-color: var(--success);
+  color: white;
+}
+
+.copy-button:hover {
+  transform: translateY(-1px);
+}
+
+.copy-button:active {
+  transform: translateY(1px);
+}
+
+/* Field with copy button */
+.field-with-copy {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.field-with-copy .field-content {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Loading spinner */
 .loading-spinner-container {
   display: flex;
