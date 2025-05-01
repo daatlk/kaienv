@@ -7,6 +7,7 @@ A web application for managing virtual machine details in your company. This das
 - User authentication with admin and user roles
 - VM management (add, edit, delete)
 - Service management for each VM
+- Operating system tracking for VMs
 - Expandable dashboard sections
 - Secure password storage
 - Role-based access control
@@ -36,6 +37,7 @@ A web application for managing virtual machine details in your company. This das
 2. Create the database schema by running the SQL scripts in the `supabase/migrations` folder:
    - First run `01_create_tables.sql`
    - Then run `02_seed_data.sql`
+   - Finally run `03_add_os_field.sql` to add OS support
 
 ### 3. Configure Environment Variables
 
@@ -84,6 +86,7 @@ To add test data to your application:
 
 The test data includes:
 - 5 virtual machines with different roles (production, application, test, development, management)
+- Different operating systems (Linux, Windows, macOS) assigned to VMs
 - 8 services distributed across these VMs
 - Various service types including databases, application servers, and management tools
 
