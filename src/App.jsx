@@ -10,6 +10,7 @@ import UserManagement from './components/UserManagementSupabase'
 import Profile from './components/Profile'
 import LoadingSpinner from './components/LoadingSpinner'
 import ManualLogout from './components/ManualLogout'
+import ServiceDetailsPage from './components/ServiceDetailsPage'
 import {
   getVMs,
   getServiceTypes,
@@ -25,7 +26,7 @@ const DashboardContainer = () => {
   const [serviceTypes, setServiceTypes] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const { currentUser } = useAuth()
+  const { currentUser, isGoogleUser } = useAuth()
 
   // Load VMs and service types from Supabase
   useEffect(() => {
@@ -34,7 +35,7 @@ const DashboardContainer = () => {
       setError(null);
 
       try {
-        // Load VMs
+        // Load VMs from Supabase for all users
         const { data: vmData, error: vmError } = await getVMs();
         if (vmError) {
           console.error('Error loading VMs:', vmError);
@@ -76,7 +77,7 @@ const DashboardContainer = () => {
     setOperationType('add');
 
     try {
-      // Add to Supabase
+      // Add to Supabase for all users
       const { data, error } = await createVM(newVM);
 
       if (error) {
@@ -106,7 +107,7 @@ const DashboardContainer = () => {
     setOperationType('update');
 
     try {
-      // Update in Supabase
+      // Update in Supabase for all users
       const { data, error } = await updateVMInSupabase(updatedVM.id, updatedVM);
 
       if (error) {
@@ -136,7 +137,7 @@ const DashboardContainer = () => {
     setOperationType('delete');
 
     try {
-      // Delete from Supabase
+      // Delete from Supabase for all users
       const { error } = await deleteVMFromSupabase(vmId);
 
       if (error) {
@@ -225,6 +226,16 @@ const ProfileContainer = () => {
   )
 }
 
+// Service details page container
+const ServiceDetailsPageContainer = () => {
+  return (
+    <>
+      <Header />
+      <ServiceDetailsPage />
+    </>
+  )
+}
+
 // Main App component with routing
 function App() {
   return (
@@ -254,6 +265,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ProfileContainer />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/service/:vmId/:serviceId"
+              element={
+                <ProtectedRoute>
+                  <ServiceDetailsPageContainer />
                 </ProtectedRoute>
               }
             />

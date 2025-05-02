@@ -1,0 +1,312 @@
+/* Login Page Styles */
+.login-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background-color: #ffffff;
+}
+
+.login-form-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 1.5rem;
+  width: 100%;
+  background-color: #ffffff;
+}
+
+@media (min-width: 768px) {
+  .login-form-container {
+    padding: 2rem;
+  }
+}
+
+.login-visual-container {
+  flex: 1;
+  background: linear-gradient(135deg, #f5f0f9 0%, #ede4f7 100%);
+  position: relative;
+  overflow: hidden;
+  display: none;
+  box-shadow: inset 5px 0 15px rgba(0, 0, 0, 0.05);
+}
+
+.login-visual-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 2rem;
+  text-align: center;
+}
+
+.visual-image {
+  width: 100%;
+  height: 300px;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600"><defs><linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%239C27B0;stop-opacity:0.1" /><stop offset="100%" style="stop-color:%23BA68C8;stop-opacity:0.3" /></linearGradient></defs><rect x="0" y="0" width="800" height="600" fill="url(%23grad1)" /><rect x="250" y="150" width="300" height="80" rx="5" fill="white" stroke="%239C27B0" stroke-width="2" /><rect x="270" y="170" width="40" height="40" rx="3" fill="%23D1C4E9" /><line x1="330" y1="180" x2="520" y2="180" stroke="%23BA68C8" stroke-width="2" /><line x1="330" y1="200" x2="480" y2="200" stroke="%23BA68C8" stroke-width="2" /><rect x="250" y="260" width="300" height="80" rx="5" fill="white" stroke="%239C27B0" stroke-width="2" /><rect x="270" y="280" width="40" height="40" rx="3" fill="%23D1C4E9" /><line x1="330" y1="290" x2="520" y2="290" stroke="%23BA68C8" stroke-width="2" /><line x1="330" y1="310" x2="480" y2="310" stroke="%23BA68C8" stroke-width="2" /><rect x="250" y="370" width="300" height="80" rx="5" fill="white" stroke="%239C27B0" stroke-width="2" /><rect x="270" y="390" width="40" height="40" rx="3" fill="%23D1C4E9" /><line x1="330" y1="400" x2="520" y2="400" stroke="%23BA68C8" stroke-width="2" /><line x1="330" y1="420" x2="480" y2="420" stroke="%23BA68C8" stroke-width="2" /><circle cx="200" cy="150" r="15" fill="%239C27B0" opacity="0.5" /><circle cx="600" cy="450" r="20" fill="%23BA68C8" opacity="0.5" /><circle cx="650" cy="200" r="10" fill="%23D1C4E9" opacity="0.5" /></svg>');
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  margin-bottom: 2rem;
+}
+
+.visual-text h3 {
+  color: #9C27B0;
+  font-size: 1.75rem;
+  margin-bottom: 1.25rem;
+  font-weight: 600;
+}
+
+.visual-text p {
+  color: #666;
+  font-size: 1.1rem;
+  line-height: 1.5;
+  max-width: 80%;
+  margin: 0 auto;
+}
+
+@media (min-width: 992px) {
+  .login-visual-container {
+    display: block;
+  }
+}
+
+.login-form {
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (max-width: 576px) {
+  .login-form {
+    max-width: 100%;
+  }
+}
+
+.login-title {
+  color: #333;
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.form-floating {
+  margin-bottom: 1.5rem;
+}
+
+.form-floating > label {
+  color: #6c757d;
+  padding-left: 12px;
+}
+
+.form-control {
+  border-radius: 4px;
+  height: calc(3.5rem + 2px);
+  padding: 1.5rem 0.75rem 0.5rem;
+  font-size: 1rem;
+  border: 1px solid #ced4da;
+}
+
+.form-control:focus {
+  border-color: #9C27B0;
+  box-shadow: 0 0 0 0.25rem rgba(156, 39, 176, 0.25);
+}
+
+.forgot-password {
+  display: block;
+  text-align: left;
+  margin-bottom: 1.5rem;
+  color: #9C27B0;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.forgot-password:hover {
+  text-decoration: underline;
+}
+
+.btn-sign-in {
+  background-color: #9C27B0;
+  border-color: #9C27B0;
+  width: 100%;
+  padding: 0.75rem;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.btn-sign-in:hover {
+  background-color: #7B1FA2;
+  border-color: #7B1FA2;
+}
+
+.btn-sign-in:focus {
+  box-shadow: 0 0 0 0.25rem rgba(156, 39, 176, 0.25);
+}
+
+.btn-google {
+  background-color: white;
+  border: 1px solid #dadce0;
+  color: #3c4043;
+  font-weight: 500;
+  padding: 0.75rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: auto;
+  min-height: 3.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.btn-google:hover {
+  background-color: #f8f9fa;
+  border-color: #dadce0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+  color: #3c4043;
+}
+
+.btn-google:focus {
+  box-shadow: 0 0 0 0.25rem rgba(66, 133, 244, 0.25);
+}
+
+.btn-google svg {
+  color: #4285F4;
+  font-size: 1.2rem;
+  margin-right: 0.5rem;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #6c757d;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.divider::before {
+  margin-right: 1rem;
+}
+
+.divider::after {
+  margin-left: 1rem;
+}
+
+.sign-up-text {
+  text-align: center;
+  margin-top: 1.5rem;
+  color: #6c757d;
+}
+
+.sign-up-link {
+  color: #9C27B0;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.sign-up-link:hover {
+  text-decoration: underline;
+}
+
+.footer-text {
+  text-align: center;
+  margin-top: 2rem;
+  color: #6c757d;
+  font-size: 0.8rem;
+  width: 100%;
+}
+
+.footer-text div:first-child {
+  font-weight: 500;
+  color: #555;
+}
+
+.footer-link {
+  color: #9C27B0;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.footer-link:hover {
+  text-decoration: underline;
+}
+
+/* Visual elements */
+.visual-dot {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.8;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.visual-dot-1 {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #ff416c, #ff4b2b);
+  top: 25%;
+  left: 40%;
+  z-index: 3;
+}
+
+.visual-dot-2 {
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(135deg, #12c2e9, #0070ba);
+  top: 15%;
+  right: 30%;
+  z-index: 3;
+}
+
+.visual-dot-3 {
+  width: 15px;
+  height: 15px;
+  background: linear-gradient(135deg, #ff6b6b, #ff4081);
+  bottom: 35%;
+  right: 15%;
+  z-index: 3;
+}
+
+.visual-circle {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 112, 186, 0.2);
+  z-index: 1;
+}
+
+.visual-circle-1 {
+  width: 300px;
+  height: 300px;
+  top: 20%;
+  left: 30%;
+  border-color: rgba(255, 75, 43, 0.2);
+}
+
+.visual-circle-2 {
+  width: 500px;
+  height: 500px;
+  top: 5%;
+  left: 20%;
+  border-color: rgba(0, 112, 186, 0.15);
+}
+
+.visual-circle-3 {
+  width: 200px;
+  height: 200px;
+  bottom: 30%;
+  right: 25%;
+  border-color: rgba(18, 194, 233, 0.2);
+}

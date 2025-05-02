@@ -8,10 +8,11 @@ import { useAuth } from '../context/AuthContext';
 const VMModal = ({ show, onHide, vm, serviceTypes, onSave, loading = false }) => {
   const [formData, setFormData] = useState({
     hostname: '',
-    ipAddress: '',
-    adminUser: '',
-    adminPassword: '',
+    ip_address: '',
+    admin_user: '',
+    admin_password: '',
     os: 'Linux',
+    os_version: '',
     services: []
   });
 
@@ -27,10 +28,11 @@ const VMModal = ({ show, onHide, vm, serviceTypes, onSave, loading = false }) =>
     } else {
       setFormData({
         hostname: '',
-        ipAddress: '',
-        adminUser: '',
-        adminPassword: '',
+        ip_address: '',
+        admin_user: '',
+        admin_password: '',
         os: 'Linux',
+        os_version: '',
         services: []
       });
     }
@@ -115,12 +117,12 @@ const VMModal = ({ show, onHide, vm, serviceTypes, onSave, loading = false }) =>
                 </Form.Group>
               </Col>
               <Col md={6}>
-                <Form.Group controlId="ipAddress">
+                <Form.Group controlId="ip_address">
                   <Form.Label>IP Address</Form.Label>
                   <Form.Control
                     type="text"
-                    name="ipAddress"
-                    value={formData.ipAddress}
+                    name="ip_address"
+                    value={formData.ip_address}
                     onChange={handleChange}
                     required
                   />
@@ -129,19 +131,19 @@ const VMModal = ({ show, onHide, vm, serviceTypes, onSave, loading = false }) =>
             </Row>
             <Row className="mb-3">
               <Col md={6}>
-                <Form.Group controlId="adminUser">
+                <Form.Group controlId="admin_user">
                   <Form.Label>Admin Username</Form.Label>
                   <Form.Control
                     type="text"
-                    name="adminUser"
-                    value={formData.adminUser}
+                    name="admin_user"
+                    value={formData.admin_user}
                     onChange={handleChange}
                     required
                   />
                 </Form.Group>
               </Col>
               <Col md={6}>
-                <Form.Group controlId="adminPassword">
+                <Form.Group controlId="admin_password">
                   <Form.Label>
                     <div className="d-flex align-items-center">
                       <FontAwesomeIcon icon={faKey} className="me-1 text-warning" />
@@ -151,8 +153,8 @@ const VMModal = ({ show, onHide, vm, serviceTypes, onSave, loading = false }) =>
                   <InputGroup>
                     <Form.Control
                       type={showPassword ? "text" : "password"}
-                      name="adminPassword"
-                      value={formData.adminPassword}
+                      name="admin_password"
+                      value={formData.admin_password}
                       onChange={handleChange}
                       required
                     />
@@ -172,7 +174,7 @@ const VMModal = ({ show, onHide, vm, serviceTypes, onSave, loading = false }) =>
             </Row>
 
             <Row className="mb-3">
-              <Col md={12}>
+              <Col md={6}>
                 <Form.Group controlId="os">
                   <Form.Label>Operating System</Form.Label>
                   <Form.Select
@@ -187,6 +189,18 @@ const VMModal = ({ show, onHide, vm, serviceTypes, onSave, loading = false }) =>
                     <option value="Unix">Unix</option>
                     <option value="Other">Other</option>
                   </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group controlId="os_version">
+                  <Form.Label>OS Version</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="os_version"
+                    value={formData.os_version || ''}
+                    onChange={handleChange}
+                    placeholder="e.g., Ubuntu 22.04, Windows Server 2019"
+                  />
                 </Form.Group>
               </Col>
             </Row>

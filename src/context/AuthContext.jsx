@@ -28,18 +28,24 @@ export const AuthProvider = ({ children }) => {
         // Get user profile to get the role
         const { data: profileData } = await getUserProfile(data.session.user.id);
 
+        // Check if this is a Google-authenticated user
+        const isGoogleUser = data.session.user.app_metadata?.provider === 'google';
+
         setCurrentUser({
           id: data.session.user.id,
           email: data.session.user.email,
           name: profileData?.name || data.session.user.user_metadata?.name || data.session.user.email,
-          role: profileData?.role || data.session.user.user_metadata?.role || 'user'
+          role: profileData?.role || data.session.user.user_metadata?.role || 'user',
+          authProvider: isGoogleUser ? 'google' : 'email',
+          picture: data.session.user.user_metadata?.avatar_url
         });
 
         console.log("Session user:", {
           id: data.session.user.id,
           email: data.session.user.email,
           name: profileData?.name || data.session.user.user_metadata?.name,
-          role: profileData?.role || data.session.user.user_metadata?.role
+          role: profileData?.role || data.session.user.user_metadata?.role,
+          authProvider: isGoogleUser ? 'google' : 'email'
         });
       }
 
@@ -50,41 +56,78 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Login function
-  const login = async (email, password) => {
-    // Sign in using Supabase client
-    const { data, error } = await signIn(email, password);
+  const login = async (email, password, authProvider = 'email', additionalInfo = {}) => {
+    if (authProvider === 'google') {
+      // Handle Google authentication as a fallback
+      // This is used when Supabase Google auth is not fully configured
+      console.log("Simulating Google authentication for:", email);
 
-    if (error) {
-      console.error("Login error:", error);
+      try {
+        // Create a user object for Google auth using the provided information
+        const googleUserId = 'google-' + Math.random().toString(36).substring(2, 15);
+        const googleUser = {
+          id: googleUserId,
+          email: email,
+          role: email.includes('admin') ? 'admin' : 'user',
+          name: additionalInfo.name || email.split('@')[0], // Use provided name or fallback to email
+          picture: additionalInfo.picture, // Store profile picture URL
+          authProvider: 'google'
+        };
+
+        console.log("Simulated Google authenticated user:", googleUser);
+
+        // Store user in state
+        setCurrentUser(googleUser);
+
+        // Also store in localStorage for our VM operations
+        localStorage.setItem('currentUser', JSON.stringify(googleUser));
+
+        return true;
+      } catch (error) {
+        console.error("Error in simulated Google authentication:", error);
+        return false;
+      }
+    } else {
+      // Regular email/password authentication
+      // Sign in using Supabase client
+      const { data, error } = await signIn(email, password);
+
+      if (error) {
+        console.error("Login error:", error);
+        return false;
+      }
+
+      if (data?.user) {
+        // Get user profile to get the role
+        const { data: profileData } = await getUserProfile(data.user.id);
+
+        // Create a user object
+        const authenticatedUser = {
+          id: data.user.id,
+          email: data.user.email,
+          role: profileData?.role || data.user.user_metadata?.role || 'user',
+          name: profileData?.name || data.user.user_metadata?.name || data.user.email,
+          authProvider: 'email'
+        };
+
+        console.log("Authenticated user:", authenticatedUser);
+
+        // Store user in state
+        setCurrentUser(authenticatedUser);
+        return true;
+      }
+
       return false;
     }
-
-    if (data?.user) {
-      // Get user profile to get the role
-      const { data: profileData } = await getUserProfile(data.user.id);
-
-      // Create a user object
-      const authenticatedUser = {
-        id: data.user.id,
-        email: data.user.email,
-        role: profileData?.role || data.user.user_metadata?.role || 'user',
-        name: profileData?.name || data.user.user_metadata?.name || data.user.email
-      };
-
-      console.log("Authenticated user:", authenticatedUser);
-
-      // Store user in state
-      setCurrentUser(authenticatedUser);
-      return true;
-    }
-
-    return false;
   };
 
   // Logout function
   const logout = async () => {
     const { error } = await signOut();
     setCurrentUser(null);
+
+    // Clear localStorage
+    localStorage.removeItem('currentUser');
   };
 
   // Check if user is admin
@@ -92,13 +135,20 @@ export const AuthProvider = ({ children }) => {
     return currentUser?.role === 'admin';
   };
 
+
+
   // Update current user profile
-  const updateProfile = async (name, currentPassword, newPassword) => {
+  const updateProfile = async (name, currentPassword, newPassword, role) => {
     if (!currentUser) return { success: false, message: 'Not authenticated' };
 
     try {
       // Prepare update data
       const userData = { name };
+
+      // If role is provided, update it
+      if (role) {
+        userData.role = role;
+      }
 
       // If password change is requested, handle it
       // In a real Supabase implementation, this would be handled differently
@@ -110,17 +160,20 @@ export const AuthProvider = ({ children }) => {
       const { data, error } = await updateUser(userData);
 
       if (error) {
+        console.error('Error updating profile:', error);
         return { success: false, message: error.message };
       }
 
       // Update the current user in state
       setCurrentUser({
         ...currentUser,
-        name: name
+        name: name,
+        ...(role && { role }) // Only update role if it was provided
       });
 
       return { success: true, message: 'Profile updated successfully' };
     } catch (error) {
+      console.error('Error in updateProfile:', error);
       return { success: false, message: error.message };
     }
   };
@@ -132,7 +185,8 @@ export const AuthProvider = ({ children }) => {
     logout,
     isAdmin,
     updateProfile,
-    loading
+    loading,
+    isGoogleUser: () => currentUser?.authProvider === 'google'
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

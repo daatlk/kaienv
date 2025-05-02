@@ -93,161 +93,161 @@ const ServiceDetails = ({ vm, serviceTypes }) => {
   };
 
   return (
-    <div className="p-3 bg-light">
-      <Card>
-        <Card.Header>
-          <h5 className="mb-0">VM Details: {vm.hostname}</h5>
-        </Card.Header>
-        <Card.Body>
-          {/* Basic Information Section */}
-          <Card className="mb-4">
-            <Card.Header>
-              <h6 className="mb-0">Basic Information</h6>
-            </Card.Header>
-            <Card.Body>
-              <Table size="sm" bordered>
-                <tbody>
-                  <tr>
-                    <th>Hostname</th>
-                    <td className="field-with-copy">
-                      <span className="field-content">{vm.hostname}</span>
-                      <CopyButton text={vm.hostname} />
-                    </td>
-                  </tr>
-                  <tr>
-                    <th>IP Address</th>
-                    <td className="field-with-copy">
-                      <span className="field-content">{vm.ipAddress}</span>
-                      <CopyButton text={vm.ipAddress} />
-                    </td>
-                  </tr>
-                  <tr>
-                    <th>Admin User</th>
-                    <td className="field-with-copy">
-                      <span className="field-content">{vm.adminUser}</span>
-                      <CopyButton text={vm.adminUser} />
-                    </td>
-                  </tr>
-                  <tr>
-                    <th>
-                      <div className="d-flex align-items-center">
-                        <FontAwesomeIcon icon={faKey} className="me-1 text-warning" />
-                        Admin Password
+    <div className="service-details-container">
+      <div className="service-details-header">
+        <h5 className="mb-3">VM Details: {vm.hostname}</h5>
+      </div>
+
+      {/* Basic Information Section */}
+      <div className="detail-section mb-4">
+        <div className="detail-section-header mb-3">
+          <FontAwesomeIcon icon={faServer} className="me-2 text-primary" />
+          <h6 className="mb-0">Basic Information</h6>
+        </div>
+
+        <div className="detail-grid">
+          <div className="detail-item">
+            <div className="detail-label">Hostname</div>
+            <div className="detail-value field-with-copy">
+              <span className="field-content">{vm.hostname}</span>
+              <CopyButton text={vm.hostname} />
+            </div>
+          </div>
+
+          <div className="detail-item">
+            <div className="detail-label">IP Address</div>
+            <div className="detail-value field-with-copy">
+              <span className="field-content">{vm.ipAddress}</span>
+              <CopyButton text={vm.ipAddress} />
+            </div>
+          </div>
+
+          <div className="detail-item">
+            <div className="detail-label">Admin User</div>
+            <div className="detail-value field-with-copy">
+              <span className="field-content">{vm.adminUser}</span>
+              <CopyButton text={vm.adminUser} />
+            </div>
+          </div>
+
+          <div className="detail-item">
+            <div className="detail-label">
+              <FontAwesomeIcon icon={faKey} className="me-1 text-warning" />
+              Admin Password
+            </div>
+            <div className="detail-value field-with-copy">
+              <span className="field-content">
+                {renderPropertyValue('adminPassword', vm.adminPassword)}
+              </span>
+              <CopyButton text={vm.adminPassword} />
+            </div>
+          </div>
+
+          <div className="detail-item">
+            <div className="detail-label">Operating System</div>
+            <div className="detail-value">
+              <OSBadge os={vm.os} /> <span className="ms-2">{vm.os}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Installed Services Section */}
+      <div className="detail-section">
+        <div className="detail-section-header mb-3">
+          <FontAwesomeIcon icon={faCogs} className="me-2 text-primary" />
+          <h6 className="mb-0">Installed Services</h6>
+        </div>
+
+        {vm.services.length === 0 ? (
+          <p className="text-muted">No services installed</p>
+        ) : (
+          <div className="service-accordion">
+            {vm.services.map((service) => (
+              <Card className="mb-3 service-card" key={service.id}>
+                <Card.Header
+                  className="d-flex justify-content-between align-items-center"
+                  onClick={() => toggleServiceExpand(service.id)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div className="d-flex align-items-center">
+                    <FontAwesomeIcon
+                      icon={getServiceIcon(service.name)}
+                      className="me-2 text-primary"
+                      size="lg"
+                    />
+                    <span>{service.name}</span>
+                  </div>
+                  <Button variant="link" className="p-0">
+                    <FontAwesomeIcon
+                      icon={expandedServices[service.id] ? faChevronUp : faChevronDown}
+                    />
+                  </Button>
+                </Card.Header>
+
+                {expandedServices[service.id] && (
+                  <Card.Body>
+                    {!service.properties ? (
+                      <Alert variant="warning">
+                        No properties found for this service.
+                      </Alert>
+                    ) : (
+                      <div className="service-properties-grid">
+                        {Object.entries(service.properties).map(([key, value]) => {
+                          // Find the label for this property
+                          const serviceType = serviceTypes.find(type => type.name === service.name);
+
+                          // Get property fields, handling both naming conventions
+                          const propertyFields = serviceType?.property_fields || serviceType?.propertyFields;
+
+                          // Find the matching field and get its label
+                          let label = key;
+                          if (propertyFields && Array.isArray(propertyFields)) {
+                            const field = propertyFields.find(field => field.name === key);
+                            if (field && field.label) {
+                              label = field.label;
+                            }
+                          }
+
+                          // Determine if this field should have a copy button
+                          const shouldHaveCopyButton =
+                            key.toLowerCase().includes('password') ||
+                            key.toLowerCase().includes('user') ||
+                            key.toLowerCase().includes('host') ||
+                            key.toLowerCase().includes('url') ||
+                            key.toLowerCase().includes('connection') ||
+                            key.toLowerCase().includes('port') ||
+                            key.toLowerCase().includes('ip') ||
+                            key.toLowerCase().includes('address') ||
+                            key.toLowerCase().includes('key');
+
+                          return (
+                            <div className="property-item" key={key}>
+                              <div className="property-label">{label}</div>
+                              {shouldHaveCopyButton ? (
+                                <div className="property-value field-with-copy">
+                                  <span className="field-content">
+                                    {renderPropertyValue(key, value, true)}
+                                  </span>
+                                  <CopyButton text={value.toString()} />
+                                </div>
+                              ) : (
+                                <div className="property-value">
+                                  {renderPropertyValue(key, value, true)}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
-                    </th>
-                    <td className="field-with-copy">
-                      <span className="field-content">
-                        {renderPropertyValue('adminPassword', vm.adminPassword)}
-                      </span>
-                      <CopyButton text={vm.adminPassword} />
-                    </td>
-                  </tr>
-                  <tr>
-                    <th>Operating System</th>
-                    <td><OSBadge os={vm.os} /></td>
-                  </tr>
-                </tbody>
-              </Table>
-            </Card.Body>
-          </Card>
-
-          {/* Installed Services Section */}
-          <Card>
-            <Card.Header>
-              <h6 className="mb-0">Installed Services</h6>
-            </Card.Header>
-            <Card.Body>
-              {vm.services.length === 0 ? (
-                <p className="text-muted">No services installed</p>
-              ) : (
-                <div className="service-accordion">
-                  {vm.services.map((service) => (
-                    <Card className="mb-3 service-card" key={service.id}>
-                      <Card.Header
-                        className="d-flex justify-content-between align-items-center"
-                        onClick={() => toggleServiceExpand(service.id)}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        <div className="d-flex align-items-center">
-                          <FontAwesomeIcon
-                            icon={getServiceIcon(service.name)}
-                            className="me-2 text-primary"
-                          />
-                          <span>{service.name}</span>
-                        </div>
-                        <Button variant="link" className="p-0">
-                          <FontAwesomeIcon
-                            icon={expandedServices[service.id] ? faChevronUp : faChevronDown}
-                          />
-                        </Button>
-                      </Card.Header>
-
-                      {expandedServices[service.id] && (
-                        <Card.Body>
-                          {!service.properties ? (
-                            <Alert variant="warning">
-                              No properties found for this service.
-                            </Alert>
-                          ) : (
-                            <Table size="sm" bordered>
-                              <tbody>
-                                {Object.entries(service.properties).map(([key, value]) => {
-                                  // Find the label for this property
-                                  const serviceType = serviceTypes.find(type => type.name === service.name);
-
-                                  // Get property fields, handling both naming conventions
-                                  const propertyFields = serviceType?.property_fields || serviceType?.propertyFields;
-
-                                  // Find the matching field and get its label
-                                  let label = key;
-                                  if (propertyFields && Array.isArray(propertyFields)) {
-                                    const field = propertyFields.find(field => field.name === key);
-                                    if (field && field.label) {
-                                      label = field.label;
-                                    }
-                                  }
-
-                                  // Determine if this field should have a copy button
-                                  const shouldHaveCopyButton =
-                                    key.toLowerCase().includes('password') ||
-                                    key.toLowerCase().includes('user') ||
-                                    key.toLowerCase().includes('host') ||
-                                    key.toLowerCase().includes('url') ||
-                                    key.toLowerCase().includes('connection') ||
-                                    key.toLowerCase().includes('port') ||
-                                    key.toLowerCase().includes('ip') ||
-                                    key.toLowerCase().includes('address') ||
-                                    key.toLowerCase().includes('key');
-
-                                  return (
-                                    <tr key={key}>
-                                      <th>{label}</th>
-                                      {shouldHaveCopyButton ? (
-                                        <td className="field-with-copy">
-                                          <span className="field-content">
-                                            {renderPropertyValue(key, value, true)}
-                                          </span>
-                                          <CopyButton text={value.toString()} />
-                                        </td>
-                                      ) : (
-                                        <td>{renderPropertyValue(key, value, true)}</td>
-                                      )}
-                                    </tr>
-                                  );
-                                })}
-                              </tbody>
-                            </Table>
-                          )}
-                        </Card.Body>
-                      )}
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </Card.Body>
-          </Card>
-        </Card.Body>
-      </Card>
+                    )}
+                  </Card.Body>
+                )}
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
