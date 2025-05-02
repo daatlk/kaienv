@@ -1,24 +1,25 @@
 import React, { useState } from 'react';
-import { Row, Col, Card, Button, Table, Badge, Spinner, Overlay, Tooltip, Alert } from 'react-bootstrap';
+import { Row, Col, Card, Button, Badge, Spinner, Alert, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useNavigate } from 'react-router-dom';
 import {
   faPlus,
   faEdit,
   faTrash,
   faServer,
-  faChevronDown,
-  faChevronUp,
-  faEye,
-  faEyeSlash,
   faLock,
   faCheck,
-  faSpinner
+  faSpinner,
+  faNetworkWired,
+  faUser,
+  faInfoCircle,
+  faKey,
+  faCopy,
+  faDesktop
 } from '@fortawesome/free-solid-svg-icons';
 import OSBadge from './OSBadge';
 import ServiceBadge from './ServiceBadge';
 import VMModal from './VMModal';
-import ServiceDetails from './ServiceDetails';
-import LoadingSpinner from './LoadingSpinner';
 import { useAuth } from '../context/AuthContext';
 
 const Dashboard = ({
@@ -32,9 +33,9 @@ const Dashboard = ({
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [currentVM, setCurrentVM] = useState(null);
-  const [expandedVMs, setExpandedVMs] = useState({});
   const [successMessage, setSuccessMessage] = useState(null);
-  const { isAdmin, currentUser } = useAuth();
+  const { isAdmin } = useAuth();
+  const navigate = useNavigate();
 
   // Show success message for a short time when an operation completes
   const showSuccess = (message) => {
@@ -81,11 +82,67 @@ const Dashboard = ({
     }
   };
 
-  const toggleExpand = (vmId) => {
-    setExpandedVMs({
-      ...expandedVMs,
-      [vmId]: !expandedVMs[vmId]
-    });
+  const handleServiceClick = (vmId, serviceId) => {
+    navigate(`/service/${vmId}/${serviceId}`);
+  };
+
+  // Custom component for VM info items with tooltips and copy functionality
+  const VMInfoItem = ({ icon, value, label, isPassword = false, iconColor = "", showValue = false }) => {
+    const [copied, setCopied] = useState(false);
+
+    const renderTooltip = (props) => (
+      <Tooltip id={`tooltip-${label}`} {...props}>
+        {copied ? "Copied!" : `${label}: ${isPassword ? "••••••••" : value}`}
+      </Tooltip>
+    );
+
+    const handleCopy = async () => {
+      try {
+        await navigator.clipboard.writeText(value);
+        setCopied(true);
+
+        // Reset copied state after 2 seconds
+        setTimeout(() => {
+          setCopied(false);
+        }, 2000);
+      } catch (err) {
+        console.error('Failed to copy text: ', err);
+      }
+    };
+
+    // Determine icon color class
+    const getIconColorClass = () => {
+      if (iconColor) return iconColor;
+      if (icon === faNetworkWired) return "text-info";
+      if (icon === faUser) return "text-warning";
+      if (icon === faKey) return "text-danger";
+      if (icon === faDesktop) return "text-success";
+      return "text-secondary";
+    };
+
+    return (
+      <div className="vm-info-item">
+        <OverlayTrigger
+          placement="top"
+          delay={{ show: 250, hide: 400 }}
+          overlay={renderTooltip}
+        >
+          <div className="vm-info-icon" onClick={handleCopy} style={{ cursor: 'pointer' }}>
+            <FontAwesomeIcon
+              icon={copied ? faCopy : icon}
+              className={copied ? "text-success" : getIconColorClass()}
+            />
+          </div>
+        </OverlayTrigger>
+        {showValue && (
+          <div className="vm-info-content">
+            <div className="vm-info-value">
+              {isPassword ? "••••••••" : value}
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -155,54 +212,27 @@ const Dashboard = ({
           </Card.Body>
         </Card>
       ) : (
-        <Table striped bordered hover responsive>
-          <thead>
-            <tr>
-              <th></th>
-              <th>Hostname</th>
-              <th>IP Address</th>
-              <th>OS</th>
-              <th>Admin User</th>
-              <th>Services</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {vms.map((vm) => (
-              <React.Fragment key={vm.id}>
-                <tr>
-                  <td className="text-center">
-                    <Button
-                      variant="link"
-                      onClick={() => toggleExpand(vm.id)}
-                      aria-label={expandedVMs[vm.id] ? "Collapse" : "Expand"}
-                    >
-                      <FontAwesomeIcon
-                        icon={expandedVMs[vm.id] ? faChevronUp : faChevronDown}
-                      />
-                    </Button>
-                  </td>
-                  <td>
-                    <FontAwesomeIcon icon={faServer} className="me-2 text-secondary" />
-                    {vm.hostname}
-                  </td>
-                  <td>{vm.ipAddress}</td>
-                  <td><OSBadge os={vm.os} /></td>
-                  <td>{vm.adminUser}</td>
-                  <td>
-                    {vm.services.map(service => (
-                      <ServiceBadge key={service.id} name={service.name} />
-                    ))}
-                  </td>
-                  <td>
+        <Row xs={1} md={2} lg={3} className="g-4">
+          {vms.map((vm) => (
+            <Col key={vm.id}>
+              <Card className="vm-card h-100">
+                <Card.Header className="d-flex justify-content-between align-items-center">
+                  <div className="d-flex align-items-center">
+                    <FontAwesomeIcon icon={faServer} className="me-2 text-primary" size="lg" />
+                    <h5 className="mb-0">{vm.hostname}</h5>
+                    <div className="ms-2">
+                      <OSBadge os={vm.os} osVersion={vm.os_version} />
+                    </div>
+                  </div>
+                  <div>
                     {isAdmin() ? (
-                      <>
+                      <div className="d-flex">
                         <Button
-                          variant="outline-primary"
-                          size="sm"
-                          className="me-2"
+                          variant="link"
+                          className="p-1 me-1"
                           onClick={() => handleEditVM(vm)}
                           disabled={loading}
+                          title="Edit VM"
                         >
                           {loading && operationType === 'update' && currentVM?.id === vm.id ? (
                             <Spinner
@@ -213,14 +243,15 @@ const Dashboard = ({
                               aria-hidden="true"
                             />
                           ) : (
-                            <FontAwesomeIcon icon={faEdit} />
+                            <FontAwesomeIcon icon={faEdit} className="text-primary" />
                           )}
                         </Button>
                         <Button
-                          variant="outline-danger"
-                          size="sm"
+                          variant="link"
+                          className="p-1"
                           onClick={() => handleDeleteVM(vm.id, vm.hostname)}
                           disabled={loading}
+                          title="Delete VM"
                         >
                           {loading && operationType === 'delete' && currentVM?.id === vm.id ? (
                             <Spinner
@@ -231,29 +262,68 @@ const Dashboard = ({
                               aria-hidden="true"
                             />
                           ) : (
-                            <FontAwesomeIcon icon={faTrash} />
+                            <FontAwesomeIcon icon={faTrash} className="text-danger" />
                           )}
                         </Button>
-                      </>
+                      </div>
                     ) : (
-                      <Badge bg="secondary">
+                      <Badge bg="secondary" pill>
                         <FontAwesomeIcon icon={faLock} className="me-1" />
                         Read Only
                       </Badge>
                     )}
-                  </td>
-                </tr>
-                {expandedVMs[vm.id] && (
-                  <tr>
-                    <td colSpan="6" className="p-0">
-                      <ServiceDetails vm={vm} serviceTypes={serviceTypes} />
-                    </td>
-                  </tr>
-                )}
-              </React.Fragment>
-            ))}
-          </tbody>
-        </Table>
+                  </div>
+                </Card.Header>
+                <Card.Body>
+                  <div className="vm-info-grid">
+                    <VMInfoItem
+                      icon={faNetworkWired}
+                      value={vm.ip_address}
+                      label="IP Address"
+                      showValue={false}
+                    />
+
+                    <VMInfoItem
+                      icon={faUser}
+                      value={vm.admin_user}
+                      label="Admin User"
+                      showValue={false}
+                    />
+
+                    <VMInfoItem
+                      icon={faKey}
+                      value={vm.admin_password}
+                      label="Admin Password"
+                      isPassword={true}
+                      showValue={false}
+                    />
+                  </div>
+
+                  <div className="mt-3">
+                    <div className="d-flex align-items-center mb-2">
+                      <FontAwesomeIcon icon={faServer} className="me-2 text-secondary" />
+                      <strong>Services</strong>
+                    </div>
+                    <div className="service-badges">
+                      {vm.services.map(service => (
+                        <div
+                          key={service.id}
+                          onClick={() => handleServiceClick(vm.id, service.id)}
+                          className="service-badge-wrapper"
+                        >
+                          <ServiceBadge name={service.name} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </Card.Body>
+                <Card.Footer className="bg-white text-center">
+                  <small className="text-muted">Click on a service icon to view details</small>
+                </Card.Footer>
+              </Card>
+            </Col>
+          ))}
+        </Row>
       )}
 
       <VMModal

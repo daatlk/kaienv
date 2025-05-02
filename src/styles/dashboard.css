@@ -329,7 +329,9 @@ p {
 /* VM Cards */
 .vm-card {
   transition: var(--transition-base);
-  cursor: pointer;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  position: relative;
 }
 
 .vm-card:hover {
@@ -341,6 +343,93 @@ p {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  background-color: white;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.vm-card .card-header .os-badge {
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+
+.vm-card .card-body {
+  padding: 1.25rem;
+}
+
+.vm-card .card-footer {
+  background-color: white;
+  border-top: 1px solid var(--gray-200);
+  padding: 0.75rem 1.25rem;
+}
+
+/* VM Info Grid */
+.vm-info-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  justify-content: center;
+}
+
+/* No media queries needed for vm-info-grid as we're using flexbox */
+
+.vm-info-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.vm-info-icon {
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  background-color: var(--gray-100);
+  border-radius: 50%;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: var(--transition-base);
+  box-shadow: var(--box-shadow-sm);
+}
+
+.vm-info-icon:hover {
+  background-color: var(--gray-200);
+  transform: scale(1.1);
+  box-shadow: var(--box-shadow);
+}
+
+.vm-info-content {
+  flex-grow: 1;
+}
+
+.vm-info-label {
+  font-size: 0.75rem;
+  color: var(--gray-600);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.25rem;
+}
+
+.vm-info-value {
+  font-weight: 500;
+  color: var(--gray-900);
+}
+
+.service-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.vm-details-container {
+  border-top: 1px solid var(--gray-200);
+  padding: 1rem;
+  background-color: var(--gray-100);
 }
 
 .vm-card .vm-status {
@@ -400,22 +489,58 @@ p {
 .service-badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.35em 0.65em;
-  font-size: 0.75em;
-  font-weight: 500;
-  line-height: 1;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 1.1rem;
   color: white;
   text-align: center;
   white-space: nowrap;
   vertical-align: baseline;
-  border-radius: 50rem;
+  border-radius: 50%;
   background-color: var(--gray-600);
   margin-right: 0.5rem;
   margin-bottom: 0.5rem;
+  transition: var(--transition-base);
+  position: relative;
 }
 
-.service-badge svg {
-  margin-right: 0.25rem;
+.service-badge-wrapper {
+  display: inline-block;
+  cursor: pointer;
+  position: relative;
+}
+
+.service-badge-wrapper:hover::after {
+  content: "View details";
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.service-badge:hover {
+  transform: scale(1.1);
+  box-shadow: var(--box-shadow-sm);
+}
+
+.service-badge .service-name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
 
 .service-badge.db {
@@ -438,14 +563,19 @@ p {
 .os-badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.35em 0.65em;
-  font-size: 0.75em;
-  font-weight: 500;
-  line-height: 1;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  font-size: 1rem;
   text-align: center;
   white-space: nowrap;
   vertical-align: baseline;
-  border-radius: 50rem;
+  border-radius: 50%;
+  transition: var(--transition-base);
+}
+
+.os-badge:hover {
+  transform: scale(1.1);
 }
 
 .os-badge.linux {
@@ -471,6 +601,151 @@ p {
 .os-badge.other {
   background-color: #e0e0e0;
   color: #424242;
+}
+
+/* Service Details Container */
+.service-details-container {
+  padding: 1.5rem;
+  background-color: var(--gray-100);
+  border-radius: var(--border-radius);
+}
+
+.service-details-header {
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--gray-300);
+  padding-bottom: 1rem;
+}
+
+.detail-section {
+  background-color: white;
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  box-shadow: var(--box-shadow-sm);
+  margin-bottom: 1.5rem;
+}
+
+.detail-section-header {
+  display: flex;
+  align-items: center;
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+
+@media (min-width: 576px) {
+  .detail-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-label {
+  font-size: 0.75rem;
+  color: var(--gray-600);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.detail-value {
+  font-weight: 500;
+  color: var(--gray-900);
+}
+
+/* Service Properties Grid */
+.service-properties-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 576px) {
+  .service-properties-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.property-item {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.75rem;
+}
+
+.property-label {
+  font-size: 0.7rem;
+  color: var(--gray-600);
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.property-value {
+  font-weight: 400;
+  color: var(--gray-900);
+}
+
+/* VM Details Container */
+.vm-details-container {
+  border-top: 1px solid var(--gray-200);
+  background-color: var(--gray-100);
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Service Page Header */
+.service-page-header {
+  border-bottom: 1px solid var(--gray-300);
+  padding-bottom: 1rem;
+  margin-bottom: 2rem;
+}
+
+.service-page-header h2 {
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+/* Service Details Simple */
+.service-details-simple .service-card {
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  margin-bottom: 2rem;
+  border: none;
+}
+
+.service-details-simple .service-card .card-body {
+  background-color: white;
+  padding: 1.5rem;
+}
+
+.service-details-simple .service-properties-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1.5rem;
+  padding: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .service-details-simple .service-properties-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .service-details-simple .service-properties-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 /* Password fields */
