@@ -2,20 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Form, Button, Alert, Container, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCircleInfo } from '@fortawesome/free-solid-svg-icons';
-import { faGoogle } from '@fortawesome/free-brands-svg-icons';
 import { Navigate, Link } from 'react-router-dom';
-import { signInWithGoogle } from '../utils/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import KaizensLogo from './KaizensLogo';
 import DebugInfo from './DebugInfo';
+import GoogleLoginButton from './GoogleLoginButton';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
-
   const { login, currentUser } = useAuth();
 
   // Log environment variables for debugging
@@ -31,52 +28,6 @@ const Login = () => {
     console.log('protocol:', window.location.protocol);
     console.log('host:', window.location.host);
   }, []);
-
-  // Handle Google login using Supabase
-  const handleGoogleLogin = async () => {
-    try {
-      setError('');
-      setGoogleLoading(true);
-
-      // Try to use Supabase's signInWithGoogle function
-      const { error } = await signInWithGoogle();
-
-      if (error) {
-        console.error('Supabase Google auth error:', error);
-
-        // If there's an error with Supabase Google auth, fall back to our simulated version
-        // This is a temporary workaround until Google OAuth is fully configured in Supabase
-        console.log('Falling back to simulated Google authentication');
-
-        // Simulate user info from Google
-        const userInfo = {
-          email: 'user@gmail.com',
-          name: 'Google User',
-          picture: 'https://example.com/profile.jpg'
-        };
-
-        // Log in the user with the simulated information
-        const success = await login(userInfo.email, null, 'google', {
-          name: userInfo.name,
-          picture: userInfo.picture
-        });
-
-        if (!success) {
-          throw new Error('Google authentication failed');
-        }
-
-        return; // Exit early if simulation succeeds
-      }
-
-      // If no error, the redirect to Google's authentication page will happen automatically
-      // After successful authentication, the user will be redirected back to the app
-      // and Supabase will handle the session
-    } catch (error) {
-      console.error('Google auth error:', error);
-      setError('Google authentication failed. Please try again or use email/password.');
-      setGoogleLoading(false);
-    }
-  };
 
   // If user is already logged in, redirect to dashboard
   if (currentUser) {
@@ -115,31 +66,7 @@ const Login = () => {
 
           {error && <Alert variant="danger">{error}</Alert>}
 
-          <Button
-            variant="light"
-            className="btn-google w-100 mb-3"
-            onClick={handleGoogleLogin}
-            disabled={googleLoading}
-          >
-            {googleLoading ? (
-              <>
-                <Spinner
-                  as="span"
-                  animation="border"
-                  size="sm"
-                  role="status"
-                  aria-hidden="true"
-                  className="me-2"
-                />
-                Connecting...
-              </>
-            ) : (
-              <>
-                <FontAwesomeIcon icon={faGoogle} className="me-2" />
-                Sign in with Google
-              </>
-            )}
-          </Button>
+          <GoogleLoginButton />
 
           <div className="divider my-4">
             <span>or</span>
