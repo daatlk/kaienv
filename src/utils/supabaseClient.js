@@ -1,11 +1,35 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Get Supabase URL and anon key from environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+let supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+// Ensure the Supabase URL is valid
+if (supabaseUrl) {
+  // Make sure the URL has a protocol
+  if (!supabaseUrl.startsWith('http://') && !supabaseUrl.startsWith('https://')) {
+    supabaseUrl = 'https://' + supabaseUrl;
+  }
+
+  // Log the URL for debugging
+  console.log('Using Supabase URL:', supabaseUrl);
+} else {
+  // Fallback to a default URL if none is provided
+  console.error('No Supabase URL provided in environment variables');
+  supabaseUrl = 'https://example.supabase.co'; // This will fail, but at least it's a valid URL
+}
+
+// Create options with better error handling
+const options = {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  }
+};
+
 // Create a single supabase client for interacting with your database
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, options);
 
 // Authentication functions
 export const signUp = async (email, password, userData) => {

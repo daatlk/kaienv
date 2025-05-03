@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Button, Alert, Container, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCircleInfo } from '@fortawesome/free-solid-svg-icons';
@@ -7,6 +7,7 @@ import { Navigate, Link } from 'react-router-dom';
 import { signInWithGoogle } from '../utils/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import KaizensLogo from './KaizensLogo';
+import DebugInfo from './DebugInfo';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -16,6 +17,20 @@ const Login = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
 
   const { login, currentUser } = useAuth();
+
+  // Log environment variables for debugging
+  useEffect(() => {
+    console.log('Environment variables:');
+    console.log('VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL);
+    console.log('VITE_PUBLIC_URL:', import.meta.env.VITE_PUBLIC_URL);
+
+    // Log window location for debugging
+    console.log('Window location:');
+    console.log('href:', window.location.href);
+    console.log('origin:', window.location.origin);
+    console.log('protocol:', window.location.protocol);
+    console.log('host:', window.location.host);
+  }, []);
 
   // Handle Google login using Supabase
   const handleGoogleLogin = async () => {
@@ -201,6 +216,9 @@ const Login = () => {
               <a href="#" className="footer-link">English</a>
             </div>
           </div>
+
+          {/* Debug information for troubleshooting */}
+          <DebugInfo />
         </div>
       </div>
 
