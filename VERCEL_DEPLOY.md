@@ -32,6 +32,14 @@ Add the following environment variables:
 - `VITE_SUPABASE_URL`: Your Supabase project URL
 - `VITE_SUPABASE_ANON_KEY`: Your Supabase anonymous key
 
+**Important**: These must be added directly in the Vercel dashboard:
+
+1. Go to your project in the Vercel dashboard
+2. Click on "Settings" > "Environment Variables"
+3. Add each variable with its corresponding value
+4. Make sure to select all environments (Production, Preview, Development)
+5. Click "Save" after adding each variable
+
 ### 4. Deploy
 
 Click "Deploy" to start the deployment process.
@@ -49,6 +57,25 @@ npm error path /vercel/path0/package.json
 ```
 
 It means Vercel is trying to deploy from the wrong branch. Make sure you're deploying from the `main` branch, not the `gh-pages` branch.
+
+### Missing Environment Variables Error
+
+If you see an error like:
+
+```
+Environment Variable "VITE_SUPABASE_URL" references Secret "vite_supabase_url", which does not exist.
+```
+
+It means you need to add the environment variables directly in the Vercel dashboard:
+
+1. Go to your project in the Vercel dashboard
+2. Click on "Settings" > "Environment Variables"
+3. Add each variable with its corresponding value:
+   - `VITE_SUPABASE_URL`: Your Supabase project URL
+   - `VITE_SUPABASE_ANON_KEY`: Your Supabase anonymous key
+4. Make sure to select all environments (Production, Preview, Development)
+5. Click "Save" after adding each variable
+6. Redeploy your project
 
 ### Manual Deployment
 
