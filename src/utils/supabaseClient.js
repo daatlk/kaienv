@@ -8,14 +8,14 @@ let supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 if (supabaseAnonKey && (supabaseAnonKey.includes('${') || supabaseAnonKey.includes('${'))) {
   console.error('Anon key environment variable substitution failed. Using hardcoded fallback key.');
   // Use a hardcoded fallback key (this should be a public anon key, not a secret)
-  supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4bnVobWhxZnpscGJxYm1ncGZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODU0NTQ2MjAsImV4cCI6MjAwMTAzMDYyMH0.SZHqIYKYX9Jz_Qb9fJ_VHlp8uCMwLUvCJJZuYyg9pes';
+  supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlkeGVuc3lwZnp5YW9pc3hoZXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTU2MzA0MDAsImV4cCI6MjAzMTIwNjQwMH0.Wd9JKu-JW3AXW-m-9-mJQENAzDVANnCHZsKUlO0Zn-o';
 }
 
 // Check if the URL contains the literal template string (which indicates a substitution failure)
 if (supabaseUrl && (supabaseUrl.includes('${') || supabaseUrl.includes('${'))) {
   console.error('Environment variable substitution failed. Using hardcoded fallback URL.');
   // Use a hardcoded fallback URL for Supabase
-  supabaseUrl = 'https://ixnuhmhqfzlpbqbmgpfr.supabase.co';
+  supabaseUrl = 'https://idxensypfzyaoisxhezs.supabase.co';
 }
 
 // Ensure the Supabase URL is valid
@@ -31,7 +31,7 @@ if (supabaseUrl) {
   // Fallback to a default URL if none is provided
   console.error('No Supabase URL provided in environment variables');
   // Use a hardcoded fallback URL for Supabase
-  supabaseUrl = 'https://ixnuhmhqfzlpbqbmgpfr.supabase.co';
+  supabaseUrl = 'https://idxensypfzyaoisxhezs.supabase.co';
 }
 
 // Create options with better error handling

@@ -17,10 +17,10 @@ This guide will help you set up Google OAuth authentication for your Supabase pr
 5. Select "Web application" as the application type
 6. Add a name for your OAuth client
 7. Add authorized JavaScript origins:
-   - Add your Supabase project URL (e.g., `https://ixnuhmhqfzlpbqbmgpfr.supabase.co`)
+   - Add your Supabase project URL (e.g., `https://idxensypfzyaoisxhezs.supabase.co`)
    - Add your application URL (e.g., `https://kaienv.vercel.app`)
 8. Add authorized redirect URIs:
-   - Add `https://ixnuhmhqfzlpbqbmgpfr.supabase.co/auth/v1/callback`
+   - Add `https://idxensypfzyaoisxhezs.supabase.co/auth/v1/callback`
    - Add any additional redirect URIs for your application
 9. Click "Create"
 10. Note the Client ID and Client Secret

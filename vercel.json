@@ -8,8 +8,8 @@
   ],
   "build": {
     "env": {
-      "VITE_SUPABASE_URL": "ixnuhmhqfzlpbqbmgpfr.supabase.co",
-      "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4bnVobWhxZnpscGJxYm1ncGZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODU0NTQ2MjAsImV4cCI6MjAwMTAzMDYyMH0.SZHqIYKYX9Jz_Qb9fJ_VHlp8uCMwLUvCJJZuYyg9pes"
+      "VITE_SUPABASE_URL": "idxensypfzyaoisxhezs.supabase.co",
+      "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlkeGVuc3lwZnp5YW9pc3hoZXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTU2MzA0MDAsImV4cCI6MjAzMTIwNjQwMH0.Wd9JKu-JW3AXW-m-9-mJQENAzDVANnCHZsKUlO0Zn-o"
     }
   },
   "git": {
