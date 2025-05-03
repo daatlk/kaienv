@@ -114,9 +114,42 @@ If you want to reset the data, you can uncomment the DELETE statements at the to
 - `src/utils`: Utility functions and API clients
 - `src/data`: Initial data models
 - `supabase/migrations`: SQL scripts for database setup
+- `.github/workflows`: GitHub Actions CI/CD workflows
 
 ### Adding New Features
 
 1. Create new components in the `src/components` folder
 2. Update the Supabase client in `src/utils/supabaseClient.js` if needed
 3. Add new routes in `src/App.jsx`
+
+### CI/CD Pipeline
+
+This project uses GitHub Actions for continuous integration and deployment:
+
+#### Build Workflow
+
+The basic build workflow (`build.yml`) runs on every push to the main branch and pull requests:
+
+1. Checks out the code
+2. Sets up Node.js
+3. Installs dependencies
+4. Builds the application
+5. Uploads build artifacts
+
+#### CI/CD Workflow
+
+The comprehensive CI/CD workflow (`ci.yml`) includes:
+
+1. **Lint**: Checks code quality using ESLint
+2. **Test**: Runs any available tests
+3. **Build**: Creates a production build
+4. **Deploy**: (Commented out by default) Can deploy to GitHub Pages
+
+#### GitHub Secrets
+
+To use these workflows, you need to set up the following secrets in your GitHub repository:
+
+- `VITE_SUPABASE_URL`: Your Supabase project URL
+- `VITE_SUPABASE_ANON_KEY`: Your Supabase anonymous key
+
+These secrets are used during the build process to connect to your Supabase backend.

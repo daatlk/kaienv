@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node scripts/check-env.js && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "seed": "node scripts/seed-test-data.js"
+    "seed": "node scripts/seed-test-data.js",
+    "check-env": "node scripts/check-env.js"
   },
   "dependencies": {
     "@fortawesome/free-brands-svg-icons": "^6.7.2",
