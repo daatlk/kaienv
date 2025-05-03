@@ -44,7 +44,7 @@ jobs:
       run: npm ci
 
     - name: Run tests
-      run: npm test || echo "No tests found"
+      run: npm test
       env:
         VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
         VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
@@ -95,3 +95,4 @@ jobs:
       with:
         folder: dist
         branch: gh-pages
+        token: ${{ secrets.GITHUB_TOKEN }}
