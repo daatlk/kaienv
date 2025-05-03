@@ -8,9 +8,8 @@
   ],
   "build": {
     "env": {
-      "VITE_SUPABASE_URL": "${VITE_SUPABASE_URL}",
-      "VITE_SUPABASE_ANON_KEY": "${VITE_SUPABASE_ANON_KEY}",
-      "VITE_PUBLIC_URL": "${VERCEL_URL}"
+      "VITE_SUPABASE_URL": "ixnuhmhqfzlpbqbmgpfr.supabase.co",
+      "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4bnVobWhxZnpscGJxYm1ncGZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODU0NTQ2MjAsImV4cCI6MjAwMTAzMDYyMH0.SZHqIYKYX9Jz_Qb9fJ_VHlp8uCMwLUvCJJZuYyg9pes"
     }
   },
   "git": {

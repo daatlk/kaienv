@@ -2,7 +2,21 @@ import { createClient } from '@supabase/supabase-js';
 
 // Get Supabase URL and anon key from environment variables
 let supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+let supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+// Check if the anon key contains the literal template string (which indicates a substitution failure)
+if (supabaseAnonKey && (supabaseAnonKey.includes('${') || supabaseAnonKey.includes('${'))) {
+  console.error('Anon key environment variable substitution failed. Using hardcoded fallback key.');
+  // Use a hardcoded fallback key (this should be a public anon key, not a secret)
+  supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4bnVobWhxZnpscGJxYm1ncGZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODU0NTQ2MjAsImV4cCI6MjAwMTAzMDYyMH0.SZHqIYKYX9Jz_Qb9fJ_VHlp8uCMwLUvCJJZuYyg9pes';
+}
+
+// Check if the URL contains the literal template string (which indicates a substitution failure)
+if (supabaseUrl && (supabaseUrl.includes('${') || supabaseUrl.includes('${'))) {
+  console.error('Environment variable substitution failed. Using hardcoded fallback URL.');
+  // Use a hardcoded fallback URL for Supabase
+  supabaseUrl = 'https://ixnuhmhqfzlpbqbmgpfr.supabase.co';
+}
 
 // Ensure the Supabase URL is valid
 if (supabaseUrl) {
@@ -16,7 +30,8 @@ if (supabaseUrl) {
 } else {
   // Fallback to a default URL if none is provided
   console.error('No Supabase URL provided in environment variables');
-  supabaseUrl = 'https://example.supabase.co'; // This will fail, but at least it's a valid URL
+  // Use a hardcoded fallback URL for Supabase
+  supabaseUrl = 'https://ixnuhmhqfzlpbqbmgpfr.supabase.co';
 }
 
 // Create options with better error handling
@@ -50,16 +65,36 @@ export const signInWithGoogle = async () => {
   try {
     // Try to get the current origin
     redirectUrl = `${window.location.origin}/dashboard`;
+
+    // Check if the origin is valid (not undefined or null)
+    if (!redirectUrl || redirectUrl === 'null/dashboard' || redirectUrl === 'undefined/dashboard') {
+      throw new Error('Invalid window.location.origin');
+    }
+
+    console.log('Using redirect URL:', redirectUrl);
   } catch (error) {
     // Fallback to a hardcoded URL if window.location.origin is not available
     console.error('Error getting window.location.origin:', error);
 
-    // Use the deployed URL as fallback
-    const deployedUrl = import.meta.env.VITE_PUBLIC_URL || 'https://kaienv.vercel.app';
-    // Ensure the URL has https:// prefix
-    const baseUrl = deployedUrl.startsWith('http') ? deployedUrl : `https://${deployedUrl}`;
-    redirectUrl = `${baseUrl}/dashboard`;
+    // Use the current URL as a basis for the redirect
+    try {
+      const currentUrl = window.location.href;
+      const urlObj = new URL(currentUrl);
+      const baseUrl = `${urlObj.protocol}//${urlObj.host}`;
+      redirectUrl = `${baseUrl}/dashboard`;
+      console.log('Using URL object redirect:', redirectUrl);
+    } catch (urlError) {
+      console.error('Error creating URL object:', urlError);
+
+      // Final fallback to a hardcoded URL
+      const deployedUrl = 'https://kaienv.vercel.app';
+      redirectUrl = `${deployedUrl}/dashboard`;
+      console.log('Using hardcoded fallback redirect:', redirectUrl);
+    }
   }
+
+  // Log the final redirect URL for debugging
+  console.log('Final Google auth redirect URL:', redirectUrl);
 
   return await supabase.auth.signInWithOAuth({
     provider: 'google',
