@@ -58,12 +58,18 @@ npm error path /vercel/path0/package.json
 
 It means Vercel is trying to deploy from the wrong branch. Make sure you're deploying from the `main` branch, not the `gh-pages` branch.
 
-### Missing Environment Variables Error
+### Schema Validation or Environment Variables Errors
 
-If you see an error like:
+If you see errors like:
 
 ```
 Environment Variable "VITE_SUPABASE_URL" references Secret "vite_supabase_url", which does not exist.
+```
+
+or
+
+```
+The `vercel.json` schema validation failed with the following message: should NOT have additional property `buildEnv`
 ```
 
 It means you need to add the environment variables directly in the Vercel dashboard:
