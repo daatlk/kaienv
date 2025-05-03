@@ -21,10 +21,26 @@ export const signIn = async (email, password) => {
 };
 
 export const signInWithGoogle = async () => {
+  // Get the current origin safely
+  let redirectUrl;
+  try {
+    // Try to get the current origin
+    redirectUrl = `${window.location.origin}/dashboard`;
+  } catch (error) {
+    // Fallback to a hardcoded URL if window.location.origin is not available
+    console.error('Error getting window.location.origin:', error);
+
+    // Use the deployed URL as fallback
+    const deployedUrl = import.meta.env.VITE_PUBLIC_URL || 'https://kaienv.vercel.app';
+    // Ensure the URL has https:// prefix
+    const baseUrl = deployedUrl.startsWith('http') ? deployedUrl : `https://${deployedUrl}`;
+    redirectUrl = `${baseUrl}/dashboard`;
+  }
+
   return await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${window.location.origin}/dashboard`,
+      redirectTo: redirectUrl,
       scopes: 'email profile'
     }
   });
