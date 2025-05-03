@@ -9,10 +9,8 @@ import {
   faServer,
   faLock,
   faCheck,
-  faSpinner,
   faNetworkWired,
   faUser,
-  faInfoCircle,
   faKey,
   faCopy,
   faDesktop
