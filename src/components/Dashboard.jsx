@@ -67,12 +67,6 @@ const Dashboard = ({
     return grouped;
   }, [vms, vmGroups]);
 
-  // Show success message for a short time when an operation completes
-  const showSuccess = (message) => {
-    setSuccessMessage(message);
-    setTimeout(() => setSuccessMessage(null), 3000);
-  };
-
   const handleAddVM = () => {
     setCurrentVM(null);
     setShowVMModal(true);
@@ -155,6 +149,11 @@ const Dashboard = ({
     navigate(`/service/${vmId}/${serviceId}`);
   };
 
+  const showSuccess = (message) => {
+    setSuccessMessage(message);
+    setTimeout(() => setSuccessMessage(null), 5000);
+  };
+
   // Custom component for VM info items with tooltips and copy functionality
   const VMInfoItem = ({ icon, value, label, isPassword = false, iconColor = "", showValue = false }) => {
     const [copied, setCopied] = useState(false);
@@ -179,16 +178,6 @@ const Dashboard = ({
       }
     };
 
-    // Determine icon color class
-    const getIconColorClass = () => {
-      if (iconColor) return iconColor;
-      if (icon === faNetworkWired) return "text-info";
-      if (icon === faUser) return "text-warning";
-      if (icon === faKey) return "text-danger";
-      if (icon === faDesktop) return "text-success";
-      return "text-secondary";
-    };
-
     return (
       <div className="vm-info-item">
         <OverlayTrigger
@@ -196,48 +185,153 @@ const Dashboard = ({
           delay={{ show: 250, hide: 400 }}
           overlay={renderTooltip}
         >
-          <div className="vm-info-icon" onClick={handleCopy} style={{ cursor: 'pointer' }}>
+          <Button
+            variant="light"
+            size="sm"
+            className="text-secondary p-1"
+            onClick={handleCopy}
+            title={`Copy ${label}`}
+          >
             <FontAwesomeIcon
-              icon={copied ? faCopy : icon}
-              className={copied ? "text-success" : getIconColorClass()}
+              icon={icon}
+              className={`me-1 ${iconColor}`}
             />
-          </div>
+            {copied && <FontAwesomeIcon icon={faCheck} className="text-success ms-1" />}
+            {showValue && (
+              <span className="ms-1">
+                {isPassword ? "••••••••" : value}
+              </span>
+            )}
+          </Button>
         </OverlayTrigger>
-        {showValue && (
-          <div className="vm-info-content">
-            <div className="vm-info-value">
-              {isPassword ? "••••••••" : value}
-            </div>
-          </div>
-        )}
       </div>
+    );
+  };
+
+  // VM Card Renderer Function - defined before it's used
+  const renderVMCard = (vm) => {
+    return (
+      <Col key={vm.id}>
+        <Card className="vm-card h-100">
+          <Card.Header className="d-flex justify-content-between align-items-center">
+            <div className="d-flex align-items-center">
+              <FontAwesomeIcon icon={faServer} className="me-2 text-primary" size="lg" />
+              <div>
+                <h5 className="mb-0">{vm.name || vm.hostname}</h5>
+                <small className="text-muted">{vm.hostname}</small>
+              </div>
+              <div className="ms-2">
+                <OSBadge os={vm.os} osVersion={vm.os_version} />
+              </div>
+            </div>
+            <div>
+              {isAdmin() ? (
+                <div className="d-flex">
+                  <Button
+                    variant="link"
+                    className="p-1 me-1"
+                    onClick={() => handleEditVM(vm)}
+                    disabled={loading}
+                    title="Edit VM"
+                  >
+                    {loading && operationType === 'update' && currentVM?.id === vm.id ? (
+                      <Spinner
+                        as="span"
+                        animation="border"
+                        size="sm"
+                        role="status"
+                        aria-hidden="true"
+                      />
+                    ) : (
+                      <FontAwesomeIcon icon={faEdit} className="text-primary" />
+                    )}
+                  </Button>
+                  <Button
+                    variant="link"
+                    className="p-1"
+                    onClick={() => handleDeleteVM(vm.id, vm.name, vm.hostname)}
+                    disabled={loading}
+                    title="Delete VM"
+                  >
+                    {loading && operationType === 'delete' && currentVM?.id === vm.id ? (
+                      <Spinner
+                        as="span"
+                        animation="border"
+                        size="sm"
+                        role="status"
+                        aria-hidden="true"
+                      />
+                    ) : (
+                      <FontAwesomeIcon icon={faTrash} className="text-danger" />
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <Badge bg="secondary" pill>
+                  <FontAwesomeIcon icon={faLock} className="me-1" />
+                  Read Only
+                </Badge>
+              )}
+            </div>
+          </Card.Header>
+          <Card.Body>
+            <div className="vm-info-grid">
+              <VMInfoItem
+                icon={faNetworkWired}
+                value={vm.ip_address}
+                label="IP Address"
+                showValue={false}
+              />
+
+              <VMInfoItem
+                icon={faUser}
+                value={vm.admin_user}
+                label="Admin User"
+                showValue={false}
+              />
+
+              <VMInfoItem
+                icon={faKey}
+                value={vm.admin_password}
+                label="Admin Password"
+                isPassword={true}
+                showValue={false}
+              />
+            </div>
+
+            <div className="mt-3">
+              <div className="d-flex align-items-center mb-2">
+                <FontAwesomeIcon icon={faServer} className="me-2 text-secondary" />
+                <strong>Services</strong>
+              </div>
+              <div className="service-badges">
+                {vm.services.map(service => (
+                  <div
+                    key={service.id}
+                    onClick={() => handleServiceClick(vm.id, service.id)}
+                    className="service-badge-wrapper"
+                  >
+                    <ServiceBadge name={service.name} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Card.Body>
+          <Card.Footer className="bg-white text-center">
+            <small className="text-muted">Click on a service icon to view details</small>
+          </Card.Footer>
+        </Card>
+      </Col>
     );
   };
 
   return (
     <div>
-      {/* Success message */}
       {successMessage && (
-        <div className="position-fixed top-0 end-0 p-3" style={{ zIndex: 1050 }}>
-          <div className="toast show" role="alert" aria-live="assertive" aria-atomic="true">
-            <div className="toast-header bg-success text-white">
-              <FontAwesomeIcon icon={faCheck} className="me-2" />
-              <strong className="me-auto">Success</strong>
-              <button
-                type="button"
-                className="btn-close btn-close-white"
-                onClick={() => setSuccessMessage(null)}
-                aria-label="Close"
-              ></button>
-            </div>
-            <div className="toast-body">
-              {successMessage}
-            </div>
-          </div>
-        </div>
+        <Alert variant="success" className="mb-4" dismissible onClose={() => setSuccessMessage(null)}>
+          {successMessage}
+        </Alert>
       )}
-
-
 
       <Row className="mb-4">
         <Col>
@@ -391,123 +485,6 @@ const Dashboard = ({
           </div>
         </div>
       )}
-
-      {/* VM Card Renderer Function */}
-      {function renderVMCard(vm) {
-        return (
-          <Col key={vm.id}>
-            <Card className="vm-card h-100">
-              <Card.Header className="d-flex justify-content-between align-items-center">
-                <div className="d-flex align-items-center">
-                  <FontAwesomeIcon icon={faServer} className="me-2 text-primary" size="lg" />
-                  <div>
-                    <h5 className="mb-0">{vm.name || vm.hostname}</h5>
-                    <small className="text-muted">{vm.hostname}</small>
-                  </div>
-                  <div className="ms-2">
-                    <OSBadge os={vm.os} osVersion={vm.os_version} />
-                  </div>
-                </div>
-                <div>
-                  {isAdmin() ? (
-                    <div className="d-flex">
-                      <Button
-                        variant="link"
-                        className="p-1 me-1"
-                        onClick={() => handleEditVM(vm)}
-                        disabled={loading}
-                        title="Edit VM"
-                      >
-                        {loading && operationType === 'update' && currentVM?.id === vm.id ? (
-                          <Spinner
-                            as="span"
-                            animation="border"
-                            size="sm"
-                            role="status"
-                            aria-hidden="true"
-                          />
-                        ) : (
-                          <FontAwesomeIcon icon={faEdit} className="text-primary" />
-                        )}
-                      </Button>
-                      <Button
-                        variant="link"
-                        className="p-1"
-                        onClick={() => handleDeleteVM(vm.id, vm.name, vm.hostname)}
-                        disabled={loading}
-                        title="Delete VM"
-                      >
-                        {loading && operationType === 'delete' && currentVM?.id === vm.id ? (
-                          <Spinner
-                            as="span"
-                            animation="border"
-                            size="sm"
-                            role="status"
-                            aria-hidden="true"
-                          />
-                        ) : (
-                          <FontAwesomeIcon icon={faTrash} className="text-danger" />
-                        )}
-                      </Button>
-                    </div>
-                  ) : (
-                    <Badge bg="secondary" pill>
-                      <FontAwesomeIcon icon={faLock} className="me-1" />
-                      Read Only
-                    </Badge>
-                  )}
-                </div>
-              </Card.Header>
-              <Card.Body>
-                <div className="vm-info-grid">
-                  <VMInfoItem
-                    icon={faNetworkWired}
-                    value={vm.ip_address}
-                    label="IP Address"
-                    showValue={false}
-                  />
-
-                  <VMInfoItem
-                    icon={faUser}
-                    value={vm.admin_user}
-                    label="Admin User"
-                    showValue={false}
-                  />
-
-                  <VMInfoItem
-                    icon={faKey}
-                    value={vm.admin_password}
-                    label="Admin Password"
-                    isPassword={true}
-                    showValue={false}
-                  />
-                </div>
-
-                <div className="mt-3">
-                  <div className="d-flex align-items-center mb-2">
-                    <FontAwesomeIcon icon={faServer} className="me-2 text-secondary" />
-                    <strong>Services</strong>
-                  </div>
-                  <div className="service-badges">
-                    {vm.services.map(service => (
-                      <div
-                        key={service.id}
-                        onClick={() => handleServiceClick(vm.id, service.id)}
-                        className="service-badge-wrapper"
-                      >
-                        <ServiceBadge name={service.name} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </Card.Body>
-              <Card.Footer className="bg-white text-center">
-                <small className="text-muted">Click on a service icon to view details</small>
-              </Card.Footer>
-            </Card>
-          </Col>
-        );
-      }}
 
       <VMModal
         show={showVMModal}
