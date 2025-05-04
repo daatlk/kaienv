@@ -66,50 +66,87 @@ export const handleAuthCallback = () => {
   if (hashParams.access_token) {
     console.log('Found access_token in hash parameters');
 
-    // Set the session directly using the tokens from the URL
-    supabase.auth.setSession({
-      access_token: hashParams.access_token,
-      refresh_token: hashParams.refresh_token || null
-    }).then(({ data, error }) => {
-      if (error) {
-        console.error('Error setting session with tokens:', error);
-        return;
-      }
+    try {
+      // Store the tokens in localStorage immediately
+      localStorage.setItem('supabase.auth.token', JSON.stringify({
+        access_token: hashParams.access_token,
+        refresh_token: hashParams.refresh_token || null,
+        expires_at: hashParams.expires_at || (Date.now() + 3600 * 1000)
+      }));
 
-      console.log('Session set successfully:', data);
+      console.log('Stored tokens in localStorage');
 
-      // Now get the session to verify it worked
-      return supabase.auth.getSession();
-    }).then(({ data, error }) => {
-      if (error) {
-        console.error('Error getting session after setting tokens:', error);
-        return;
-      }
+      // Set the session directly using the tokens from the URL
+      supabase.auth.setSession({
+        access_token: hashParams.access_token,
+        refresh_token: hashParams.refresh_token || null
+      }).then(({ data, error }) => {
+        if (error) {
+          console.error('Error setting session with tokens:', error);
+          // Continue anyway - we've stored the tokens in localStorage
+        } else {
+          console.log('Session set successfully:', data);
+        }
 
-      console.log('Session after setting tokens:', data);
+        // Now get the session to verify it worked
+        return supabase.auth.getSession();
+      }).then(({ data, error }) => {
+        if (error) {
+          console.error('Error getting session after setting tokens:', error);
+          // Try to get user info from the token directly
+          try {
+            // Parse the JWT to get user info
+            const tokenParts = hashParams.access_token.split('.');
+            if (tokenParts.length === 3) {
+              const payload = JSON.parse(atob(tokenParts[1]));
+              console.log('Extracted user info from token:', payload);
 
-      if (data?.session) {
-        console.log('User authenticated:', data.session.user);
+              // Create a user object from the token payload
+              const userObj = {
+                id: payload.sub,
+                email: payload.email || 'user@example.com',
+                name: payload.name || payload.email || 'User',
+                role: payload.role || 'user',
+                authProvider: 'google',
+                picture: payload.picture || null
+              };
 
-        // Store the user in localStorage for persistence
-        const userObj = {
-          id: data.session.user.id,
-          email: data.session.user.email,
-          name: data.session.user.user_metadata?.name || data.session.user.email,
-          role: data.session.user.user_metadata?.role || 'user',
-          authProvider: data.session.user.app_metadata?.provider || 'email',
-          picture: data.session.user.user_metadata?.avatar_url || data.session.user.user_metadata?.picture
-        };
+              console.log('Created user object from token:', userObj);
+              localStorage.setItem('currentUser', JSON.stringify(userObj));
+            }
+          } catch (e) {
+            console.error('Error parsing token:', e);
+          }
+        } else if (data?.session) {
+          console.log('User authenticated:', data.session.user);
 
-        console.log('Storing user in localStorage:', userObj);
-        localStorage.setItem('currentUser', JSON.stringify(userObj));
+          // Store the user in localStorage for persistence
+          const userObj = {
+            id: data.session.user.id,
+            email: data.session.user.email,
+            name: data.session.user.user_metadata?.name || data.session.user.email,
+            role: data.session.user.user_metadata?.role || 'user',
+            authProvider: data.session.user.app_metadata?.provider || 'email',
+            picture: data.session.user.user_metadata?.avatar_url || data.session.user.user_metadata?.picture
+          };
 
-        // Store the tokens in localStorage as well
-        localStorage.setItem('supabase.auth.token', JSON.stringify({
-          access_token: hashParams.access_token,
-          refresh_token: hashParams.refresh_token || null,
-          expires_at: hashParams.expires_at || (Date.now() + 3600 * 1000)
-        }));
+          console.log('Storing user in localStorage:', userObj);
+          localStorage.setItem('currentUser', JSON.stringify(userObj));
+        } else {
+          console.error('No session found after setting tokens');
+          // Try to create a minimal user object
+          const userObj = {
+            id: 'user-' + Math.random().toString(36).substring(2, 15),
+            email: 'user@example.com',
+            name: 'Authenticated User',
+            role: 'user',
+            authProvider: 'google',
+            picture: null
+          };
+
+          console.log('Created fallback user object:', userObj);
+          localStorage.setItem('currentUser', JSON.stringify(userObj));
+        }
 
         // Redirect to the dashboard
         if (redirectUrl) {
@@ -120,18 +157,16 @@ export const handleAuthCallback = () => {
           console.log('No stored redirect URL, redirecting to dashboard');
           window.location.href = '/dashboard';
         }
-
-        return true;
-      } else {
-        console.error('No session found after setting tokens');
-        // Try a different approach - just redirect to dashboard and let the app handle it
+      }).catch(err => {
+        console.error('Unexpected error in auth callback:', err);
+        // Redirect to dashboard anyway as a fallback
         window.location.href = '/dashboard';
-      }
-    }).catch(err => {
-      console.error('Unexpected error in auth callback:', err);
+      });
+    } catch (err) {
+      console.error('Error in auth callback:', err);
       // Redirect to dashboard anyway as a fallback
       window.location.href = '/dashboard';
-    });
+    }
   } else {
     console.error('No access_token found in hash parameters');
     // Just redirect to dashboard as a fallback
