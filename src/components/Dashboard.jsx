@@ -17,7 +17,8 @@ import {
   faLayerGroup,
   faObjectGroup,
   faFilter,
-  faExchangeAlt
+  faExchangeAlt,
+  faInfoCircle
 } from '@fortawesome/free-solid-svg-icons';
 import OSBadge from './OSBadge';
 import ServiceBadge from './ServiceBadge';
@@ -294,8 +295,7 @@ const Dashboard = ({
                 size="lg"
               />
               <div>
-                <h5 className="mb-0">{vm.name || vm.hostname}</h5>
-                <small className="text-muted">{vm.hostname}</small>
+                <h5 className="mb-0">{vm.hostname}</h5>
                 {vm.group_id && (
                   <Badge
                     pill
@@ -314,53 +314,59 @@ const Dashboard = ({
               </div>
             </div>
             <div>
-              {isAdmin() ? (
-                <div className="d-flex">
-                  <Button
-                    variant="link"
-                    className="p-1 me-1"
-                    onClick={() => handleEditVM(vm)}
-                    disabled={loading}
-                    title="Edit VM"
-                  >
-                    {loading && operationType === 'update' && currentVM?.id === vm.id ? (
-                      <Spinner
-                        as="span"
-                        animation="border"
-                        size="sm"
-                        role="status"
-                        aria-hidden="true"
-                      />
-                    ) : (
-                      <FontAwesomeIcon icon={faEdit} className="text-primary" />
-                    )}
-                  </Button>
-                  <Button
-                    variant="link"
-                    className="p-1"
-                    onClick={() => handleDeleteVM(vm.id, vm.name, vm.hostname)}
-                    disabled={loading}
-                    title="Delete VM"
-                  >
-                    {loading && operationType === 'delete' && currentVM?.id === vm.id ? (
-                      <Spinner
-                        as="span"
-                        animation="border"
-                        size="sm"
-                        role="status"
-                        aria-hidden="true"
-                      />
-                    ) : (
-                      <FontAwesomeIcon icon={faTrash} className="text-danger" />
-                    )}
-                  </Button>
-                </div>
-              ) : (
-                <Badge bg="secondary" pill>
-                  <FontAwesomeIcon icon={faLock} className="me-1" />
-                  Read Only
-                </Badge>
-              )}
+              <div className="d-flex">
+                <Button
+                  variant="link"
+                  className="p-1 me-1"
+                  onClick={() => navigate(`/vm/${vm.id}`)}
+                  title="View VM Details"
+                >
+                  <FontAwesomeIcon icon={faInfoCircle} className="text-info" />
+                </Button>
+
+                {isAdmin() && (
+                  <>
+                    <Button
+                      variant="link"
+                      className="p-1 me-1"
+                      onClick={() => handleEditVM(vm)}
+                      disabled={loading}
+                      title="Edit VM"
+                    >
+                      {loading && operationType === 'update' && currentVM?.id === vm.id ? (
+                        <Spinner
+                          as="span"
+                          animation="border"
+                          size="sm"
+                          role="status"
+                          aria-hidden="true"
+                        />
+                      ) : (
+                        <FontAwesomeIcon icon={faEdit} className="text-primary" />
+                      )}
+                    </Button>
+                    <Button
+                      variant="link"
+                      className="p-1"
+                      onClick={() => handleDeleteVM(vm.id, vm.name, vm.hostname)}
+                      disabled={loading}
+                      title="Delete VM"
+                    >
+                      {loading && operationType === 'delete' && currentVM?.id === vm.id ? (
+                        <Spinner
+                          as="span"
+                          animation="border"
+                          size="sm"
+                          role="status"
+                          aria-hidden="true"
+                        />
+                      ) : (
+                        <FontAwesomeIcon icon={faTrash} className="text-danger" />
+                      )}
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
           </Card.Header>
           <Card.Body>
@@ -407,7 +413,10 @@ const Dashboard = ({
             </div>
           </Card.Body>
           <Card.Footer className="bg-white text-center">
-            <small className="text-muted">Click on a service icon to view details</small>
+            <small className="text-muted">
+              Click <FontAwesomeIcon icon={faInfoCircle} className="text-info mx-1" /> to view VM details or
+              click on a service icon to view service details
+            </small>
           </Card.Footer>
         </Card>
       </Col>

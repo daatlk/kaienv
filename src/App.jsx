@@ -11,6 +11,7 @@ import Profile from './components/Profile'
 import LoadingSpinner from './components/LoadingSpinner'
 import ManualLogout from './components/ManualLogout'
 import ServiceDetailsPage from './components/ServiceDetailsPage'
+import VMDetailsPage from './components/VMDetailsPage'
 import {
   getVMs,
   getServiceTypes,
@@ -441,6 +442,13 @@ const ServiceDetailsPageContainer = () => {
   )
 }
 
+// VM details page container
+const VMDetailsPageContainer = () => {
+  return (
+    <VMDetailsPage />
+  )
+}
+
 // Main App component with routing
 function App() {
   // State to track if we're handling an auth callback
@@ -548,6 +556,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ServiceDetailsPageContainer />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/vm/:vmId"
+              element={
+                <ProtectedRoute>
+                  <VMDetailsPageContainer />
                 </ProtectedRoute>
               }
             />
