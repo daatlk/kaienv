@@ -296,18 +296,6 @@ const Dashboard = ({
               />
               <div>
                 <h5 className="mb-0">{vm.hostname}</h5>
-                {vm.group_id && (
-                  <Badge
-                    pill
-                    style={{
-                      backgroundColor: groupColor || 'var(--bs-secondary)',
-                      fontSize: '0.7rem'
-                    }}
-                    className="ms-1"
-                  >
-                    {vmGroups.find(g => g.id === vm.group_id)?.name}
-                  </Badge>
-                )}
               </div>
               <div className="ms-2">
                 <OSBadge os={vm.os} osVersion={vm.os_version} />
