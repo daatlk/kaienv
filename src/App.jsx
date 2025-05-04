@@ -239,22 +239,45 @@ const ServiceDetailsPageContainer = () => {
 
 // Main App component with routing
 function App() {
+  // State to track if we're handling an auth callback
+  const [isHandlingCallback, setIsHandlingCallback] = useState(false);
+
   // Initialize the auth callback handler
   // This will check if the current URL is an authentication callback
   // and redirect to the correct URL if needed
   useEffect(() => {
     // Check if this is an authentication callback
-    const isHandled = initAuthCallbackHandler();
+    if (window.location.hash && window.location.hash.includes('access_token')) {
+      console.log('Detected authentication callback in App component');
+      setIsHandlingCallback(true);
 
-    if (isHandled) {
-      console.log('Authentication callback handled. Redirecting...');
-      // If the callback was handled, we don't need to render the app
-      // The user will be redirected to the correct URL
-      return;
+      // Initialize the auth callback handler
+      const isHandled = initAuthCallbackHandler();
+
+      if (isHandled) {
+        console.log('Authentication callback handled. Redirecting...');
+        // If the callback was handled, we don't need to render the app
+        // The user will be redirected to the correct URL
+        return;
+      }
     }
 
     console.log('Not an authentication callback or already handled.');
   }, []);
+
+  // If we're handling an auth callback, show a loading spinner
+  if (isHandlingCallback) {
+    return (
+      <Container fluid className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+        <div className="text-center">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="mt-3">Processing authentication...</p>
+        </div>
+      </Container>
+    );
+  }
 
   return (
     <AuthProvider>

@@ -22,37 +22,88 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     // Check if user is logged in
     const checkSession = async () => {
-      const { data, error } = await getSession();
+      console.log("Checking authentication session...");
+      setLoading(true);
 
-      if (data?.session?.user) {
-        // Get user profile to get the role
-        const { data: profileData } = await getUserProfile(data.session.user.id);
+      try {
+        const { data, error } = await getSession();
 
-        // Check if this is a Google-authenticated user
-        const isGoogleUser = data.session.user.app_metadata?.provider === 'google';
+        if (error) {
+          console.error("Error getting session:", error);
+          setLoading(false);
+          return;
+        }
 
-        setCurrentUser({
-          id: data.session.user.id,
-          email: data.session.user.email,
-          name: profileData?.name || data.session.user.user_metadata?.name || data.session.user.email,
-          role: profileData?.role || data.session.user.user_metadata?.role || 'user',
-          authProvider: isGoogleUser ? 'google' : 'email',
-          picture: data.session.user.user_metadata?.avatar_url
-        });
+        console.log("Session data:", data);
 
-        console.log("Session user:", {
-          id: data.session.user.id,
-          email: data.session.user.email,
-          name: profileData?.name || data.session.user.user_metadata?.name,
-          role: profileData?.role || data.session.user.user_metadata?.role,
-          authProvider: isGoogleUser ? 'google' : 'email'
-        });
+        if (data?.session?.user) {
+          console.log("User found in session:", data.session.user);
+
+          // Get user profile to get the role
+          const { data: profileData, error: profileError } = await getUserProfile(data.session.user.id);
+
+          if (profileError) {
+            console.error("Error getting user profile:", profileError);
+          }
+
+          console.log("User profile data:", profileData);
+
+          // Check if this is a Google-authenticated user
+          const isGoogleUser = data.session.user.app_metadata?.provider === 'google';
+          console.log("Is Google user:", isGoogleUser);
+          console.log("User metadata:", data.session.user.user_metadata);
+          console.log("App metadata:", data.session.user.app_metadata);
+
+          const userObj = {
+            id: data.session.user.id,
+            email: data.session.user.email,
+            name: profileData?.name || data.session.user.user_metadata?.name || data.session.user.email,
+            role: profileData?.role || data.session.user.user_metadata?.role || 'user',
+            authProvider: isGoogleUser ? 'google' : 'email',
+            picture: data.session.user.user_metadata?.avatar_url || data.session.user.user_metadata?.picture
+          };
+
+          console.log("Setting current user:", userObj);
+          setCurrentUser(userObj);
+
+          // Also store in localStorage for persistence across page refreshes
+          localStorage.setItem('currentUser', JSON.stringify(userObj));
+        } else {
+          console.log("No user found in session");
+
+          // Check if we have a user in localStorage (for simulated auth)
+          const storedUser = localStorage.getItem('currentUser');
+          if (storedUser) {
+            try {
+              const parsedUser = JSON.parse(storedUser);
+              console.log("Found user in localStorage:", parsedUser);
+              setCurrentUser(parsedUser);
+            } catch (e) {
+              console.error("Error parsing stored user:", e);
+              localStorage.removeItem('currentUser');
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Unexpected error in checkSession:", e);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
+    // Check for hash parameters that indicate an auth callback
+    const hash = window.location.hash;
+    if (hash && hash.includes('access_token')) {
+      console.log("Detected authentication callback hash parameters");
+    }
+
     checkSession();
+
+    // Set up an interval to periodically check the session
+    const interval = setInterval(checkSession, 60000); // Check every minute
+
+    // Clean up the interval when the component unmounts
+    return () => clearInterval(interval);
   }, []);
 
   // Login function
