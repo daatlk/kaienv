@@ -24,15 +24,31 @@ const GoogleLoginButton = () => {
       setError(null);
       setLoading(true);
 
-      // Try to use Supabase's signInWithGoogle function
-      const { error } = await signInWithGoogle();
+      console.log('Initiating Google login...');
+      console.log('Current URL:', window.location.href);
+      console.log('Redirect URL will be:', 'https://v0-kaienv.vercel.app/dashboard');
 
-      if (error) {
-        console.error('Supabase Google auth error:', error);
-        setError(`Google authentication error: ${error.message}`);
+      // Store the current timestamp for debugging
+      localStorage.setItem('google_auth_initiated', Date.now().toString());
+
+      // Try to use Supabase's signInWithGoogle function
+      const result = await signInWithGoogle();
+      console.log('Google auth result:', result);
+
+      if (result.error) {
+        console.error('Supabase Google auth error:', result.error);
+        setError(`Google authentication error: ${result.error.message}`);
         setShowManualLogin(true);
       } else {
         console.log('Google authentication initiated successfully');
+        console.log('Auth data:', result.data);
+
+        // If we have a URL, redirect to it
+        if (result.data?.url) {
+          console.log('Redirecting to:', result.data.url);
+          window.location.href = result.data.url;
+          return;
+        }
       }
     } catch (error) {
       console.error('Google auth error:', error);

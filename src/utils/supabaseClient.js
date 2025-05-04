@@ -65,29 +65,77 @@ export const signInWithGoogle = async () => {
   const redirectUrl = 'https://v0-kaienv.vercel.app/dashboard';
 
   console.log('Using fixed production redirect URL:', redirectUrl);
+  console.log('Current Supabase URL:', supabaseUrl);
+  console.log('Current Supabase Anon Key:', supabaseAnonKey ? 'Key exists (not shown for security)' : 'No key found');
+  console.log('Current window location:', window.location.href);
+  console.log('Current window origin:', window.location.origin);
+
+  // Store debugging information in localStorage
+  localStorage.setItem('auth_debug_info', JSON.stringify({
+    timestamp: new Date().toISOString(),
+    supabaseUrl: supabaseUrl,
+    hasAnonKey: !!supabaseAnonKey,
+    currentUrl: window.location.href,
+    redirectUrl: redirectUrl
+  }));
 
   // Store the redirect URL in localStorage so we can check it after authentication
   localStorage.setItem('auth_redirect_url', redirectUrl);
 
-  // Configure Supabase auth to use the production URL for site URL
-  // This is a more direct way to control the redirect behavior
-  const { error: configError } = await supabase.auth.setSession({
-    access_token: null,
-    refresh_token: null
-  });
+  try {
+    // Configure Supabase auth to use the production URL for site URL
+    // This is a more direct way to control the redirect behavior
+    const { error: configError } = await supabase.auth.setSession({
+      access_token: null,
+      refresh_token: null
+    });
 
-  if (configError) {
-    console.error('Error configuring auth session:', configError);
-  }
-
-  // Initiate the OAuth flow with Google
-  return await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: redirectUrl,
-      scopes: 'email profile'
+    if (configError) {
+      console.error('Error configuring auth session:', configError);
+      return { error: configError };
     }
-  });
+
+    // Get the current session to check if we're already authenticated
+    const { data: sessionData } = await supabase.auth.getSession();
+    console.log('Current session before Google auth:', sessionData);
+
+    // Initiate the OAuth flow with Google
+    console.log('Initiating OAuth flow with Google...');
+    const result = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectUrl,
+        scopes: 'email profile',
+        queryParams: {
+          prompt: 'select_account' // Force Google to show the account selection screen
+        }
+      }
+    });
+
+    console.log('OAuth flow result:', result);
+
+    // Store the result in localStorage for debugging
+    localStorage.setItem('auth_result', JSON.stringify({
+      timestamp: new Date().toISOString(),
+      hasError: !!result.error,
+      errorMessage: result.error ? result.error.message : null,
+      hasData: !!result.data,
+      dataKeys: result.data ? Object.keys(result.data) : []
+    }));
+
+    return result;
+  } catch (error) {
+    console.error('Unexpected error in signInWithGoogle:', error);
+
+    // Store the error in localStorage for debugging
+    localStorage.setItem('auth_error', JSON.stringify({
+      timestamp: new Date().toISOString(),
+      message: error.message,
+      stack: error.stack
+    }));
+
+    return { error };
+  }
 };
 
 export const signOut = async () => {
@@ -142,7 +190,7 @@ export const getUsers = async () => {
       // 1. is_deleted doesn't exist as a property, OR
       // 2. is_deleted is null, OR
       // 3. is_deleted is false
-      return !user.hasOwnProperty('is_deleted') || user.is_deleted === null || user.is_deleted === false;
+      return !Object.prototype.hasOwnProperty.call(user, 'is_deleted') || user.is_deleted === null || user.is_deleted === false;
     });
 
     console.log(`After filtering, ${filteredData.length} users remain`);
