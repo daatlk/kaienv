@@ -341,12 +341,14 @@ export const createVM = async (vmData) => {
   const { data: vm, error: vmError } = await supabase
     .from('vms')
     .insert([{
+      name: vmData.name,
       hostname: vmData.hostname,
       ip_address: vmData.ip_address,
       admin_user: vmData.admin_user,
       admin_password: vmData.admin_password,
       os: vmData.os || 'Linux',
       os_version: vmData.os_version || '',
+      group_id: vmData.group_id || null,
       created_by: userId
     }])
     .select()
@@ -378,12 +380,14 @@ export const updateVM = async (id, vmData) => {
   const { error: vmError } = await supabase
     .from('vms')
     .update({
+      name: vmData.name,
       hostname: vmData.hostname,
       ip_address: vmData.ip_address,
       admin_user: vmData.admin_user,
       admin_password: vmData.admin_password,
       os: vmData.os || 'Linux',
       os_version: vmData.os_version || '',
+      group_id: vmData.group_id,
       updated_at: new Date()
     })
     .eq('id', id);
@@ -433,6 +437,66 @@ export const getServiceTypes = async () => {
   return await supabase
     .from('service_types')
     .select('*');
+};
+
+// VM Group management functions
+export const getVMGroups = async () => {
+  return await supabase
+    .from('vm_groups')
+    .select('*')
+    .order('name');
+};
+
+export const getVMGroupById = async (id) => {
+  return await supabase
+    .from('vm_groups')
+    .select('*')
+    .eq('id', id)
+    .single();
+};
+
+export const createVMGroup = async (groupData) => {
+  // Get current user
+  const { data: { session } } = await getSession();
+  let userId = null;
+
+  if (session) {
+    userId = session.user.id;
+  } else {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+    userId = currentUser?.id || null;
+  }
+
+  return await supabase
+    .from('vm_groups')
+    .insert([{
+      name: groupData.name,
+      description: groupData.description || '',
+      created_by: userId
+    }])
+    .select()
+    .single();
+};
+
+export const updateVMGroup = async (id, groupData) => {
+  return await supabase
+    .from('vm_groups')
+    .update({
+      name: groupData.name,
+      description: groupData.description || '',
+      updated_at: new Date()
+    })
+    .eq('id', id)
+    .select()
+    .single();
+};
+
+export const deleteVMGroup = async (id) => {
+  // This will set group_id to null for all VMs in this group due to ON DELETE SET NULL
+  return await supabase
+    .from('vm_groups')
+    .delete()
+    .eq('id', id);
 };
 
 // Helper function to get the current user

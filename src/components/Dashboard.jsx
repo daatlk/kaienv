@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Row, Col, Card, Button, Badge, Spinner, Alert, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import React, { useState, useMemo } from 'react';
+import { Row, Col, Card, Button, Badge, Spinner, Alert, OverlayTrigger, Tooltip, Accordion } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -13,27 +13,59 @@ import {
   faUser,
   faKey,
   faCopy,
-  faDesktop
+  faDesktop,
+  faLayerGroup,
+  faObjectGroup
 } from '@fortawesome/free-solid-svg-icons';
 import OSBadge from './OSBadge';
 import ServiceBadge from './ServiceBadge';
 import VMModal from './VMModal';
+import VMGroupModal from './VMGroupModal';
 import { useAuth } from '../context/AuthContext';
 
 const Dashboard = ({
   vms,
   serviceTypes,
+  vmGroups = [],
   onAddVM,
   onUpdateVM,
   onDeleteVM,
+  onAddGroup,
+  onUpdateGroup,
+  onDeleteGroup,
   loading = false,
   operationType = null
 }) => {
-  const [showModal, setShowModal] = useState(false);
+  const [showVMModal, setShowVMModal] = useState(false);
+  const [showGroupModal, setShowGroupModal] = useState(false);
   const [currentVM, setCurrentVM] = useState(null);
+  const [currentGroup, setCurrentGroup] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
+
+  // Group VMs by their group_id
+  const groupedVMs = useMemo(() => {
+    const grouped = {
+      ungrouped: []
+    };
+
+    // First add all groups as keys
+    vmGroups.forEach(group => {
+      grouped[group.id] = [];
+    });
+
+    // Then add VMs to their respective groups
+    vms.forEach(vm => {
+      if (vm.group_id && grouped[vm.group_id]) {
+        grouped[vm.group_id].push(vm);
+      } else {
+        grouped.ungrouped.push(vm);
+      }
+    });
+
+    return grouped;
+  }, [vms, vmGroups]);
 
   // Show success message for a short time when an operation completes
   const showSuccess = (message) => {
@@ -43,19 +75,19 @@ const Dashboard = ({
 
   const handleAddVM = () => {
     setCurrentVM(null);
-    setShowModal(true);
+    setShowVMModal(true);
   };
 
   const handleEditVM = (vm) => {
     setCurrentVM(vm);
-    setShowModal(true);
+    setShowVMModal(true);
   };
 
-  const handleDeleteVM = async (vmId, hostname) => {
-    if (window.confirm(`Are you sure you want to delete the VM "${hostname}"?`)) {
+  const handleDeleteVM = async (vmId, vmName, hostname) => {
+    if (window.confirm(`Are you sure you want to delete the VM "${vmName || hostname}"?`)) {
       const success = await onDeleteVM(vmId);
       if (success) {
-        showSuccess(`VM "${hostname}" was deleted successfully`);
+        showSuccess(`VM "${vmName || hostname}" was deleted successfully`);
       }
     }
   };
@@ -66,17 +98,56 @@ const Dashboard = ({
     if (vm.id) {
       success = await onUpdateVM(vm);
       if (success) {
-        showSuccess(`VM "${vm.hostname}" was updated successfully`);
+        showSuccess(`VM "${vm.name || vm.hostname}" was updated successfully`);
       }
     } else {
       success = await onAddVM(vm);
       if (success) {
-        showSuccess(`VM "${vm.hostname}" was added successfully`);
+        showSuccess(`VM "${vm.name || vm.hostname}" was added successfully`);
       }
     }
 
     if (success) {
-      setShowModal(false);
+      setShowVMModal(false);
+    }
+  };
+
+  const handleAddGroup = () => {
+    setCurrentGroup(null);
+    setShowGroupModal(true);
+  };
+
+  const handleEditGroup = (group) => {
+    setCurrentGroup(group);
+    setShowGroupModal(true);
+  };
+
+  const handleDeleteGroup = async (groupId, groupName) => {
+    if (window.confirm(`Are you sure you want to delete the group "${groupName}"? VMs in this group will become ungrouped.`)) {
+      const success = await onDeleteGroup(groupId);
+      if (success) {
+        showSuccess(`Group "${groupName}" was deleted successfully`);
+      }
+    }
+  };
+
+  const handleSaveGroup = async (group) => {
+    let success;
+
+    if (group.id) {
+      success = await onUpdateGroup(group);
+      if (success) {
+        showSuccess(`Group "${group.name}" was updated successfully`);
+      }
+    } else {
+      success = await onAddGroup(group);
+      if (success) {
+        showSuccess(`Group "${group.name}" was created successfully`);
+      }
+    }
+
+    if (success) {
+      setShowGroupModal(false);
     }
   };
 
@@ -174,30 +245,57 @@ const Dashboard = ({
         </Col>
         <Col xs="auto">
           {isAdmin() && (
-            <Button
-              variant="primary"
-              onClick={handleAddVM}
-              disabled={loading && operationType === 'add'}
-            >
-              {loading && operationType === 'add' ? (
-                <>
-                  <Spinner
-                    as="span"
-                    animation="border"
-                    size="sm"
-                    role="status"
-                    aria-hidden="true"
-                    className="me-2"
-                  />
-                  Adding...
-                </>
-              ) : (
-                <>
-                  <FontAwesomeIcon icon={faPlus} className="me-2" />
-                  Add VM
-                </>
-              )}
-            </Button>
+            <div className="d-flex">
+              <Button
+                variant="outline-primary"
+                onClick={handleAddGroup}
+                disabled={loading && operationType === 'add_group'}
+                className="me-2"
+              >
+                {loading && operationType === 'add_group' ? (
+                  <>
+                    <Spinner
+                      as="span"
+                      animation="border"
+                      size="sm"
+                      role="status"
+                      aria-hidden="true"
+                      className="me-2"
+                    />
+                    Adding Group...
+                  </>
+                ) : (
+                  <>
+                    <FontAwesomeIcon icon={faLayerGroup} className="me-2" />
+                    Add Group
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleAddVM}
+                disabled={loading && operationType === 'add'}
+              >
+                {loading && operationType === 'add' ? (
+                  <>
+                    <Spinner
+                      as="span"
+                      animation="border"
+                      size="sm"
+                      role="status"
+                      aria-hidden="true"
+                      className="me-2"
+                    />
+                    Adding VM...
+                  </>
+                ) : (
+                  <>
+                    <FontAwesomeIcon icon={faPlus} className="me-2" />
+                    Add VM
+                  </>
+                )}
+              </Button>
+            </div>
           )}
         </Col>
       </Row>
@@ -229,126 +327,203 @@ const Dashboard = ({
           </Card.Body>
         </Card>
       ) : (
-        <Row xs={1} md={2} lg={3} className="g-4">
-          {vms.map((vm) => (
-            <Col key={vm.id}>
-              <Card className="vm-card h-100">
-                <Card.Header className="d-flex justify-content-between align-items-center">
-                  <div className="d-flex align-items-center">
-                    <FontAwesomeIcon icon={faServer} className="me-2 text-primary" size="lg" />
-                    <h5 className="mb-0">{vm.hostname}</h5>
-                    <div className="ms-2">
-                      <OSBadge os={vm.os} osVersion={vm.os_version} />
-                    </div>
-                  </div>
-                  <div>
-                    {isAdmin() ? (
-                      <div className="d-flex">
-                        <Button
-                          variant="link"
-                          className="p-1 me-1"
-                          onClick={() => handleEditVM(vm)}
-                          disabled={loading}
-                          title="Edit VM"
-                        >
-                          {loading && operationType === 'update' && currentVM?.id === vm.id ? (
-                            <Spinner
-                              as="span"
-                              animation="border"
-                              size="sm"
-                              role="status"
-                              aria-hidden="true"
-                            />
-                          ) : (
-                            <FontAwesomeIcon icon={faEdit} className="text-primary" />
-                          )}
-                        </Button>
-                        <Button
-                          variant="link"
-                          className="p-1"
-                          onClick={() => handleDeleteVM(vm.id, vm.hostname)}
-                          disabled={loading}
-                          title="Delete VM"
-                        >
-                          {loading && operationType === 'delete' && currentVM?.id === vm.id ? (
-                            <Spinner
-                              as="span"
-                              animation="border"
-                              size="sm"
-                              role="status"
-                              aria-hidden="true"
-                            />
-                          ) : (
-                            <FontAwesomeIcon icon={faTrash} className="text-danger" />
-                          )}
-                        </Button>
-                      </div>
-                    ) : (
-                      <Badge bg="secondary" pill>
-                        <FontAwesomeIcon icon={faLock} className="me-1" />
-                        Read Only
-                      </Badge>
-                    )}
-                  </div>
-                </Card.Header>
-                <Card.Body>
-                  <div className="vm-info-grid">
-                    <VMInfoItem
-                      icon={faNetworkWired}
-                      value={vm.ip_address}
-                      label="IP Address"
-                      showValue={false}
-                    />
+        <div>
+          {/* Display VM Groups */}
+          {vmGroups.length > 0 && (
+            <Accordion defaultActiveKey={vmGroups.map(g => g.id)} className="mb-4" alwaysOpen>
+              {vmGroups.map(group => {
+                const groupVMs = vms.filter(vm => vm.group_id === group.id);
+                if (groupVMs.length === 0) return null;
 
-                    <VMInfoItem
-                      icon={faUser}
-                      value={vm.admin_user}
-                      label="Admin User"
-                      showValue={false}
-                    />
-
-                    <VMInfoItem
-                      icon={faKey}
-                      value={vm.admin_password}
-                      label="Admin Password"
-                      isPassword={true}
-                      showValue={false}
-                    />
-                  </div>
-
-                  <div className="mt-3">
-                    <div className="d-flex align-items-center mb-2">
-                      <FontAwesomeIcon icon={faServer} className="me-2 text-secondary" />
-                      <strong>Services</strong>
-                    </div>
-                    <div className="service-badges">
-                      {vm.services.map(service => (
-                        <div
-                          key={service.id}
-                          onClick={() => handleServiceClick(vm.id, service.id)}
-                          className="service-badge-wrapper"
-                        >
-                          <ServiceBadge name={service.name} />
+                return (
+                  <Accordion.Item key={group.id} eventKey={group.id}>
+                    <Accordion.Header>
+                      <div className="d-flex align-items-center justify-content-between w-100 me-3">
+                        <div className="d-flex align-items-center">
+                          <FontAwesomeIcon icon={faObjectGroup} className="me-2 text-primary" />
+                          <span className="fw-bold">{group.name}</span>
+                          <Badge bg="secondary" className="ms-2">{groupVMs.length} VMs</Badge>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                </Card.Body>
-                <Card.Footer className="bg-white text-center">
-                  <small className="text-muted">Click on a service icon to view details</small>
-                </Card.Footer>
-              </Card>
-            </Col>
-          ))}
-        </Row>
+                        {isAdmin() && (
+                          <div className="d-flex" onClick={e => e.stopPropagation()}>
+                            <Button
+                              variant="link"
+                              className="p-1 me-1"
+                              onClick={() => handleEditGroup(group)}
+                              disabled={loading}
+                              title="Edit Group"
+                            >
+                              <FontAwesomeIcon icon={faEdit} className="text-primary" />
+                            </Button>
+                            <Button
+                              variant="link"
+                              className="p-1"
+                              onClick={() => handleDeleteGroup(group.id, group.name)}
+                              disabled={loading}
+                              title="Delete Group"
+                            >
+                              <FontAwesomeIcon icon={faTrash} className="text-danger" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </Accordion.Header>
+                    <Accordion.Body>
+                      <Row xs={1} md={2} lg={3} className="g-4">
+                        {groupVMs.map(vm => renderVMCard(vm))}
+                      </Row>
+                    </Accordion.Body>
+                  </Accordion.Item>
+                );
+              })}
+            </Accordion>
+          )}
+
+          {/* Display Ungrouped VMs */}
+          <div className="mb-4">
+            <h5 className="mb-3">
+              <FontAwesomeIcon icon={faServer} className="me-2 text-secondary" />
+              Ungrouped VMs
+            </h5>
+            <Row xs={1} md={2} lg={3} className="g-4">
+              {vms.filter(vm => !vm.group_id).map(vm => renderVMCard(vm))}
+            </Row>
+          </div>
+        </div>
       )}
 
+      {/* VM Card Renderer Function */}
+      {function renderVMCard(vm) {
+        return (
+          <Col key={vm.id}>
+            <Card className="vm-card h-100">
+              <Card.Header className="d-flex justify-content-between align-items-center">
+                <div className="d-flex align-items-center">
+                  <FontAwesomeIcon icon={faServer} className="me-2 text-primary" size="lg" />
+                  <div>
+                    <h5 className="mb-0">{vm.name || vm.hostname}</h5>
+                    <small className="text-muted">{vm.hostname}</small>
+                  </div>
+                  <div className="ms-2">
+                    <OSBadge os={vm.os} osVersion={vm.os_version} />
+                  </div>
+                </div>
+                <div>
+                  {isAdmin() ? (
+                    <div className="d-flex">
+                      <Button
+                        variant="link"
+                        className="p-1 me-1"
+                        onClick={() => handleEditVM(vm)}
+                        disabled={loading}
+                        title="Edit VM"
+                      >
+                        {loading && operationType === 'update' && currentVM?.id === vm.id ? (
+                          <Spinner
+                            as="span"
+                            animation="border"
+                            size="sm"
+                            role="status"
+                            aria-hidden="true"
+                          />
+                        ) : (
+                          <FontAwesomeIcon icon={faEdit} className="text-primary" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="link"
+                        className="p-1"
+                        onClick={() => handleDeleteVM(vm.id, vm.name, vm.hostname)}
+                        disabled={loading}
+                        title="Delete VM"
+                      >
+                        {loading && operationType === 'delete' && currentVM?.id === vm.id ? (
+                          <Spinner
+                            as="span"
+                            animation="border"
+                            size="sm"
+                            role="status"
+                            aria-hidden="true"
+                          />
+                        ) : (
+                          <FontAwesomeIcon icon={faTrash} className="text-danger" />
+                        )}
+                      </Button>
+                    </div>
+                  ) : (
+                    <Badge bg="secondary" pill>
+                      <FontAwesomeIcon icon={faLock} className="me-1" />
+                      Read Only
+                    </Badge>
+                  )}
+                </div>
+              </Card.Header>
+              <Card.Body>
+                <div className="vm-info-grid">
+                  <VMInfoItem
+                    icon={faNetworkWired}
+                    value={vm.ip_address}
+                    label="IP Address"
+                    showValue={false}
+                  />
+
+                  <VMInfoItem
+                    icon={faUser}
+                    value={vm.admin_user}
+                    label="Admin User"
+                    showValue={false}
+                  />
+
+                  <VMInfoItem
+                    icon={faKey}
+                    value={vm.admin_password}
+                    label="Admin Password"
+                    isPassword={true}
+                    showValue={false}
+                  />
+                </div>
+
+                <div className="mt-3">
+                  <div className="d-flex align-items-center mb-2">
+                    <FontAwesomeIcon icon={faServer} className="me-2 text-secondary" />
+                    <strong>Services</strong>
+                  </div>
+                  <div className="service-badges">
+                    {vm.services.map(service => (
+                      <div
+                        key={service.id}
+                        onClick={() => handleServiceClick(vm.id, service.id)}
+                        className="service-badge-wrapper"
+                      >
+                        <ServiceBadge name={service.name} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Card.Body>
+              <Card.Footer className="bg-white text-center">
+                <small className="text-muted">Click on a service icon to view details</small>
+              </Card.Footer>
+            </Card>
+          </Col>
+        );
+      }}
+
       <VMModal
-        show={showModal}
-        onHide={() => setShowModal(false)}
+        show={showVMModal}
+        onHide={() => setShowVMModal(false)}
         vm={currentVM}
         serviceTypes={serviceTypes}
+        vmGroups={vmGroups}
         onSave={handleSaveVM}
+        loading={loading}
+      />
+
+      <VMGroupModal
+        show={showGroupModal}
+        onHide={() => setShowGroupModal(false)}
+        group={currentGroup}
+        onSave={handleSaveGroup}
         loading={loading}
       />
     </div>

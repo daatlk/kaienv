@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Row, Col, Card, ListGroup, InputGroup, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faTrash, faEye, faEyeSlash, faKey, faSave } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faTrash, faEye, faEyeSlash, faKey, faSave, faLayerGroup } from '@fortawesome/free-solid-svg-icons';
 import ServiceForm from './ServiceForm';
 import { useAuth } from '../context/AuthContext';
+import VMGroupSelector from './VMGroupSelector';
 
-const VMModal = ({ show, onHide, vm, serviceTypes, onSave, loading = false }) => {
+const VMModal = ({ show, onHide, vm, serviceTypes, vmGroups = [], onSave, loading = false }) => {
   const [formData, setFormData] = useState({
+    name: '',
     hostname: '',
     ip_address: '',
     admin_user: '',
     admin_password: '',
     os: 'Linux',
     os_version: '',
+    group_id: null,
     services: []
   });
 
@@ -27,12 +30,14 @@ const VMModal = ({ show, onHide, vm, serviceTypes, onSave, loading = false }) =>
       setFormData({ ...vm });
     } else {
       setFormData({
+        name: '',
         hostname: '',
         ip_address: '',
         admin_user: '',
         admin_password: '',
         os: 'Linux',
         os_version: '',
+        group_id: null,
         services: []
       });
     }
@@ -103,6 +108,37 @@ const VMModal = ({ show, onHide, vm, serviceTypes, onSave, loading = false }) =>
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
+            <Row className="mb-3">
+              <Col md={6}>
+                <Form.Group controlId="name">
+                  <Form.Label>VM Name</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                    placeholder="Friendly name for this VM"
+                  />
+                  <Form.Text className="text-muted">
+                    A user-friendly name to identify this VM
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group controlId="group_id">
+                  <Form.Label>
+                    <FontAwesomeIcon icon={faLayerGroup} className="me-1 text-info" />
+                    VM Group
+                  </Form.Label>
+                  <VMGroupSelector
+                    value={formData.group_id}
+                    onChange={(groupId) => setFormData({...formData, group_id: groupId})}
+                    vmGroups={vmGroups}
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
             <Row className="mb-3">
               <Col md={6}>
                 <Form.Group controlId="hostname">

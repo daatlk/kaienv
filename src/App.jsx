@@ -14,9 +14,13 @@ import ServiceDetailsPage from './components/ServiceDetailsPage'
 import {
   getVMs,
   getServiceTypes,
+  getVMGroups,
   createVM,
   updateVM as updateVMInSupabase,
-  deleteVM as deleteVMFromSupabase
+  deleteVM as deleteVMFromSupabase,
+  createVMGroup,
+  updateVMGroup as updateVMGroupInSupabase,
+  deleteVMGroup as deleteVMGroupFromSupabase
 } from './utils/supabaseClient'
 import { AuthProvider, useAuth, ProtectedRoute, AdminRoute } from './context/AuthContext'
 import { initAuthCallbackHandler } from './utils/authCallback'
@@ -25,6 +29,7 @@ import { initAuthCallbackHandler } from './utils/authCallback'
 const DashboardContainer = () => {
   const [vms, setVms] = useState([])
   const [serviceTypes, setServiceTypes] = useState([])
+  const [vmGroups, setVMGroups] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const { currentUser, isGoogleUser } = useAuth()
@@ -103,6 +108,17 @@ const DashboardContainer = () => {
         } else {
           setServiceTypes(serviceTypeData || []);
         }
+
+        // Load VM groups
+        const { data: vmGroupData, error: vmGroupError } = await getVMGroups();
+        if (vmGroupError) {
+          console.error('Error loading VM groups:', vmGroupError);
+
+          // Set empty VM groups array when there's an error
+          setVMGroups([]);
+        } else {
+          setVMGroups(vmGroupData || []);
+        }
       } catch (error) {
         console.error('Error loading data:', error);
         setError('An unexpected error occurred. Please try again later.');
@@ -110,6 +126,7 @@ const DashboardContainer = () => {
         // Set empty arrays when there's an error
         setVms([]);
         setServiceTypes([]);
+        setVMGroups([]);
       } finally {
         setLoading(false);
       }
@@ -118,10 +135,10 @@ const DashboardContainer = () => {
     loadData();
   }, []);
 
-  // State for VM operations
+  // State for VM and group operations
   const [vmOperationLoading, setVmOperationLoading] = useState(false)
   const [vmOperationError, setVmOperationError] = useState(null)
-  const [operationType, setOperationType] = useState(null) // 'add', 'update', or 'delete'
+  const [operationType, setOperationType] = useState(null) // 'add', 'update', 'delete', 'add_group', 'update_group', or 'delete_group'
 
   // Function to add a new VM
   const handleAddVM = async (newVM) => {
@@ -213,6 +230,100 @@ const DashboardContainer = () => {
     }
   }
 
+  // Function to add a new VM group
+  const handleAddGroup = async (newGroup) => {
+    setVmOperationLoading(true);
+    setVmOperationError(null);
+    setOperationType('add_group');
+
+    try {
+      // Add to Supabase
+      const { data, error } = await createVMGroup(newGroup);
+
+      if (error) {
+        console.error('Error adding VM group:', error);
+        setVmOperationError(`Failed to add VM group: ${error.message}`);
+        return false;
+      }
+
+      // Add the new group to the state
+      setVMGroups([...vmGroups, data]);
+      return true;
+    } catch (error) {
+      console.error('Error adding VM group:', error);
+      setVmOperationError('An unexpected error occurred while adding the VM group.');
+      return false;
+    } finally {
+      setVmOperationLoading(false);
+      // Reset operation type after a delay
+      setTimeout(() => setOperationType(null), 2000);
+    }
+  }
+
+  // Function to update an existing VM group
+  const handleUpdateGroup = async (updatedGroup) => {
+    setVmOperationLoading(true);
+    setVmOperationError(null);
+    setOperationType('update_group');
+
+    try {
+      // Update in Supabase
+      const { data, error } = await updateVMGroupInSupabase(updatedGroup.id, updatedGroup);
+
+      if (error) {
+        console.error('Error updating VM group:', error);
+        setVmOperationError(`Failed to update VM group: ${error.message}`);
+        return false;
+      }
+
+      // Update the group in the state
+      setVMGroups(vmGroups.map(group => group.id === updatedGroup.id ? data : group));
+      return true;
+    } catch (error) {
+      console.error('Error updating VM group:', error);
+      setVmOperationError('An unexpected error occurred while updating the VM group.');
+      return false;
+    } finally {
+      setVmOperationLoading(false);
+      // Reset operation type after a delay
+      setTimeout(() => setOperationType(null), 2000);
+    }
+  }
+
+  // Function to delete a VM group
+  const handleDeleteGroup = async (groupId) => {
+    setVmOperationLoading(true);
+    setVmOperationError(null);
+    setOperationType('delete_group');
+
+    try {
+      // Delete from Supabase
+      const { error } = await deleteVMGroupFromSupabase(groupId);
+
+      if (error) {
+        console.error('Error deleting VM group:', error);
+        setVmOperationError(`Failed to delete VM group: ${error.message}`);
+        return false;
+      }
+
+      // Remove the group from the state
+      setVMGroups(vmGroups.filter(group => group.id !== groupId));
+
+      // Update VMs that were in this group to have no group
+      setVms(vms.map(vm => vm.group_id === groupId ? { ...vm, group_id: null } : vm));
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting VM group:', error);
+      setVmOperationError('An unexpected error occurred while deleting the VM group.');
+      return false;
+    } finally {
+      setVmOperationLoading(false);
+      // Reset operation type after a delay
+      setTimeout(() => setOperationType(null), 2000);
+    }
+  }
+
   // Redirect to login if not authenticated
   if (!currentUser) {
     return <Navigate to="/login" />
@@ -243,9 +354,13 @@ const DashboardContainer = () => {
           <Dashboard
             vms={vms}
             serviceTypes={serviceTypes}
+            vmGroups={vmGroups}
             onAddVM={handleAddVM}
             onUpdateVM={handleUpdateVM}
             onDeleteVM={handleDeleteVM}
+            onAddGroup={handleAddGroup}
+            onUpdateGroup={handleUpdateGroup}
+            onDeleteGroup={handleDeleteGroup}
             loading={vmOperationLoading}
             operationType={operationType}
           />
