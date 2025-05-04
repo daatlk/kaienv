@@ -86,9 +86,8 @@ export const signInWithGoogle = async () => {
         scopes: 'email profile',
         queryParams: {
           // Force Google to show the account selection screen
-          prompt: 'select_account',
-          // Specify the hosted domain to restrict to kaizens.co.uk emails
-          hd: 'kaizens.co.uk'
+          prompt: 'select_account'
+          // Domain restriction removed - allowing all Google accounts
         }
       }
     });

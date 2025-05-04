@@ -94,7 +94,7 @@ const GoogleLoginButton = () => {
 
       <div className="mt-3 text-center">
         <p className="text-muted small">
-          Sign in with your Kaizens Group Google account to access the dashboard.
+          Sign in with your Google account to access the dashboard.
         </p>
       </div>
     </div>
