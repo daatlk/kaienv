@@ -251,14 +251,40 @@ function App() {
       console.log('Detected authentication callback in App component');
       setIsHandlingCallback(true);
 
-      // Initialize the auth callback handler
-      const isHandled = initAuthCallbackHandler();
+      try {
+        // Initialize the auth callback handler
+        const isHandled = initAuthCallbackHandler();
 
-      if (isHandled) {
-        console.log('Authentication callback handled. Redirecting...');
-        // If the callback was handled, we don't need to render the app
-        // The user will be redirected to the correct URL
+        if (isHandled) {
+          console.log('Authentication callback handled. Redirecting...');
+          // If the callback was handled, we don't need to render the app
+          // The user will be redirected to the correct URL
+          return;
+        }
+      } catch (error) {
+        console.error('Error handling authentication callback:', error);
+        // If there's an error, redirect to dashboard anyway
+        window.location.href = '/dashboard';
         return;
+      }
+    } else {
+      // Check if we have a stored user in localStorage
+      const storedUser = localStorage.getItem('currentUser');
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          console.log('Found stored user in localStorage:', parsedUser.email);
+
+          // If we're on the login page but have a stored user, redirect to dashboard
+          if (window.location.pathname === '/login') {
+            console.log('Already logged in, redirecting to dashboard');
+            window.location.href = '/dashboard';
+            return;
+          }
+        } catch (e) {
+          console.error('Error parsing stored user:', e);
+          localStorage.removeItem('currentUser');
+        }
       }
     }
 

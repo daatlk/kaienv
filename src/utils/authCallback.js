@@ -59,44 +59,84 @@ export const handleAuthCallback = () => {
   // If we're already on the production URL, process the authentication
   console.log('Processing authentication on current domain');
 
-  // Process the authentication callback
-  // This will update the Supabase auth state
-  supabase.auth.getSession().then(({ data, error }) => {
-    if (error) {
-      console.error('Error getting session after callback:', error);
-      return;
-    }
+  // Extract the access token from the URL hash
+  const hashParams = getHashParams();
+  console.log('Hash parameters extracted:', Object.keys(hashParams));
 
-    console.log('Session after callback:', data);
+  if (hashParams.access_token) {
+    console.log('Found access_token in hash parameters');
 
-    if (data?.session) {
-      console.log('User authenticated:', data.session.user);
-
-      // Store the user in localStorage for persistence
-      const userObj = {
-        id: data.session.user.id,
-        email: data.session.user.email,
-        name: data.session.user.user_metadata?.name || data.session.user.email,
-        role: data.session.user.user_metadata?.role || 'user',
-        authProvider: data.session.user.app_metadata?.provider || 'email',
-        picture: data.session.user.user_metadata?.avatar_url || data.session.user.user_metadata?.picture
-      };
-
-      console.log('Storing user in localStorage:', userObj);
-      localStorage.setItem('currentUser', JSON.stringify(userObj));
-
-      // Redirect to the dashboard
-      if (redirectUrl) {
-        console.log('Redirecting to stored redirect URL:', redirectUrl);
-        window.location.href = redirectUrl;
-      } else {
-        console.log('No stored redirect URL, redirecting to dashboard');
-        window.location.href = '/dashboard';
+    // Set the session directly using the tokens from the URL
+    supabase.auth.setSession({
+      access_token: hashParams.access_token,
+      refresh_token: hashParams.refresh_token || null
+    }).then(({ data, error }) => {
+      if (error) {
+        console.error('Error setting session with tokens:', error);
+        return;
       }
 
-      return true;
-    }
-  });
+      console.log('Session set successfully:', data);
+
+      // Now get the session to verify it worked
+      return supabase.auth.getSession();
+    }).then(({ data, error }) => {
+      if (error) {
+        console.error('Error getting session after setting tokens:', error);
+        return;
+      }
+
+      console.log('Session after setting tokens:', data);
+
+      if (data?.session) {
+        console.log('User authenticated:', data.session.user);
+
+        // Store the user in localStorage for persistence
+        const userObj = {
+          id: data.session.user.id,
+          email: data.session.user.email,
+          name: data.session.user.user_metadata?.name || data.session.user.email,
+          role: data.session.user.user_metadata?.role || 'user',
+          authProvider: data.session.user.app_metadata?.provider || 'email',
+          picture: data.session.user.user_metadata?.avatar_url || data.session.user.user_metadata?.picture
+        };
+
+        console.log('Storing user in localStorage:', userObj);
+        localStorage.setItem('currentUser', JSON.stringify(userObj));
+
+        // Store the tokens in localStorage as well
+        localStorage.setItem('supabase.auth.token', JSON.stringify({
+          access_token: hashParams.access_token,
+          refresh_token: hashParams.refresh_token || null,
+          expires_at: hashParams.expires_at || (Date.now() + 3600 * 1000)
+        }));
+
+        // Redirect to the dashboard
+        if (redirectUrl) {
+          console.log('Redirecting to stored redirect URL:', redirectUrl);
+          // Remove the hash from the URL to avoid exposing tokens
+          window.location.href = redirectUrl.split('#')[0];
+        } else {
+          console.log('No stored redirect URL, redirecting to dashboard');
+          window.location.href = '/dashboard';
+        }
+
+        return true;
+      } else {
+        console.error('No session found after setting tokens');
+        // Try a different approach - just redirect to dashboard and let the app handle it
+        window.location.href = '/dashboard';
+      }
+    }).catch(err => {
+      console.error('Unexpected error in auth callback:', err);
+      // Redirect to dashboard anyway as a fallback
+      window.location.href = '/dashboard';
+    });
+  } else {
+    console.error('No access_token found in hash parameters');
+    // Just redirect to dashboard as a fallback
+    window.location.href = '/dashboard';
+  }
 
   return true;
 };

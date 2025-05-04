@@ -26,10 +26,53 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
 
       try {
+        // First check if we have tokens in localStorage
+        const storedTokens = localStorage.getItem('supabase.auth.token');
+        if (storedTokens) {
+          try {
+            const parsedTokens = JSON.parse(storedTokens);
+            console.log("Found tokens in localStorage, setting session");
+
+            // Set the session with the stored tokens
+            if (parsedTokens.access_token) {
+              const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+                access_token: parsedTokens.access_token,
+                refresh_token: parsedTokens.refresh_token || null
+              });
+
+              if (sessionError) {
+                console.error("Error setting session with stored tokens:", sessionError);
+                // If there's an error, remove the stored tokens
+                localStorage.removeItem('supabase.auth.token');
+              } else {
+                console.log("Session set successfully with stored tokens:", sessionData);
+              }
+            }
+          } catch (e) {
+            console.error("Error parsing stored tokens:", e);
+            localStorage.removeItem('supabase.auth.token');
+          }
+        }
+
+        // Now get the current session
         const { data, error } = await getSession();
 
         if (error) {
           console.error("Error getting session:", error);
+
+          // Check if we have a user in localStorage (for simulated auth)
+          const storedUser = localStorage.getItem('currentUser');
+          if (storedUser) {
+            try {
+              const parsedUser = JSON.parse(storedUser);
+              console.log("Found user in localStorage despite session error:", parsedUser);
+              setCurrentUser(parsedUser);
+            } catch (e) {
+              console.error("Error parsing stored user:", e);
+              localStorage.removeItem('currentUser');
+            }
+          }
+
           setLoading(false);
           return;
         }
@@ -68,6 +111,15 @@ export const AuthProvider = ({ children }) => {
 
           // Also store in localStorage for persistence across page refreshes
           localStorage.setItem('currentUser', JSON.stringify(userObj));
+
+          // Store the tokens in localStorage as well
+          if (data.session.access_token) {
+            localStorage.setItem('supabase.auth.token', JSON.stringify({
+              access_token: data.session.access_token,
+              refresh_token: data.session.refresh_token || null,
+              expires_at: new Date(data.session.expires_at).getTime() || (Date.now() + 3600 * 1000)
+            }));
+          }
         } else {
           console.log("No user found in session");
 
