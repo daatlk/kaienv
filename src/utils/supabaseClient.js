@@ -472,6 +472,7 @@ export const createVMGroup = async (groupData) => {
     .insert([{
       name: groupData.name,
       description: groupData.description || '',
+      color: groupData.color || '#6c757d', // Default gray if no color provided
       created_by: userId
     }])
     .select()
@@ -484,6 +485,7 @@ export const updateVMGroup = async (id, groupData) => {
     .update({
       name: groupData.name,
       description: groupData.description || '',
+      color: groupData.color || '#6c757d', // Default gray if no color provided
       updated_at: new Date()
     })
     .eq('id', id)
@@ -497,6 +499,17 @@ export const deleteVMGroup = async (id) => {
     .from('vm_groups')
     .delete()
     .eq('id', id);
+};
+
+// Move multiple VMs to a group
+export const moveVMsToGroup = async (vmIds, groupId) => {
+  return await supabase
+    .from('vms')
+    .update({
+      group_id: groupId,
+      updated_at: new Date()
+    })
+    .in('id', vmIds);
 };
 
 // Helper function to get the current user

@@ -20,7 +20,8 @@ import {
   deleteVM as deleteVMFromSupabase,
   createVMGroup,
   updateVMGroup as updateVMGroupInSupabase,
-  deleteVMGroup as deleteVMGroupFromSupabase
+  deleteVMGroup as deleteVMGroupFromSupabase,
+  moveVMsToGroup
 } from './utils/supabaseClient'
 import { AuthProvider, useAuth, ProtectedRoute, AdminRoute } from './context/AuthContext'
 import { initAuthCallbackHandler } from './utils/authCallback'
@@ -324,6 +325,41 @@ const DashboardContainer = () => {
     }
   }
 
+  // Function to move multiple VMs to a group
+  const handleMoveVMs = async (vmIds, targetGroupId) => {
+    setVmOperationLoading(true);
+    setVmOperationError(null);
+    setOperationType('move_vms');
+
+    try {
+      // Move VMs in Supabase
+      const { error } = await moveVMsToGroup(vmIds, targetGroupId);
+
+      if (error) {
+        console.error('Error moving VMs to group:', error);
+        setVmOperationError(`Failed to move VMs: ${error.message}`);
+        return false;
+      }
+
+      // Update VMs in the state
+      setVms(vms.map(vm =>
+        vmIds.includes(vm.id)
+          ? { ...vm, group_id: targetGroupId }
+          : vm
+      ));
+
+      return true;
+    } catch (error) {
+      console.error('Error moving VMs to group:', error);
+      setVmOperationError('An unexpected error occurred while moving VMs.');
+      return false;
+    } finally {
+      setVmOperationLoading(false);
+      // Reset operation type after a delay
+      setTimeout(() => setOperationType(null), 2000);
+    }
+  }
+
   // Redirect to login if not authenticated
   if (!currentUser) {
     return <Navigate to="/login" />
@@ -361,6 +397,7 @@ const DashboardContainer = () => {
             onAddGroup={handleAddGroup}
             onUpdateGroup={handleUpdateGroup}
             onDeleteGroup={handleDeleteGroup}
+            onMoveVMs={handleMoveVMs}
             loading={vmOperationLoading}
             operationType={operationType}
           />
