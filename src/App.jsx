@@ -78,8 +78,43 @@ const DashboardContainer = () => {
             setError('Failed to load VMs. Please try again later.');
           }
 
-          // Set empty VMs array
-          setVms([]);
+          // Check if we're in demo mode (using the manual Google login)
+          const storedUser = localStorage.getItem('currentUser');
+          if (storedUser && JSON.parse(storedUser).authProvider === 'google') {
+            console.log('Demo mode detected, using sample VMs');
+            // Create some sample VMs for demo purposes
+            const sampleVMs = [
+              {
+                id: 'sample-1',
+                hostname: 'demo-vm-1',
+                ip_address: '192.168.1.101',
+                admin_user: 'admin',
+                admin_password: 'password123',
+                os: 'Windows',
+                os_version: 'Server 2022',
+                services: [
+                  { id: 'svc-1', name: 'Web Server', properties: { port: '80', status: 'running' } },
+                  { id: 'svc-2', name: 'Database', properties: { port: '3306', status: 'running' } }
+                ]
+              },
+              {
+                id: 'sample-2',
+                hostname: 'demo-vm-2',
+                ip_address: '192.168.1.102',
+                admin_user: 'admin',
+                admin_password: 'password123',
+                os: 'Linux',
+                os_version: 'Ubuntu 22.04',
+                services: [
+                  { id: 'svc-3', name: 'API Server', properties: { port: '8080', status: 'running' } }
+                ]
+              }
+            ];
+            setVms(sampleVMs);
+          } else {
+            // Set empty VMs array for non-demo users
+            setVms([]);
+          }
         } else {
           setVms(vmData || []);
         }
@@ -98,8 +133,55 @@ const DashboardContainer = () => {
             setError('Failed to load service types. Please try again later.');
           }
 
-          // Set empty service types array
-          setServiceTypes([]);
+          // Check if we're in demo mode (using the manual Google login)
+          const storedUser = localStorage.getItem('currentUser');
+          if (storedUser && JSON.parse(storedUser).authProvider === 'google') {
+            console.log('Demo mode detected, using sample service types');
+            // Create some sample service types for demo purposes
+            const sampleServiceTypes = [
+              {
+                id: 'st-1',
+                name: 'Web Server',
+                icon: 'globe',
+                description: 'HTTP/HTTPS web server',
+                property_fields: [
+                  { name: 'port', label: 'Port', type: 'text' },
+                  { name: 'status', label: 'Status', type: 'text' },
+                  { name: 'domain', label: 'Domain Name', type: 'text' },
+                  { name: 'ssl', label: 'SSL Enabled', type: 'text' }
+                ]
+              },
+              {
+                id: 'st-2',
+                name: 'Database',
+                icon: 'database',
+                description: 'Database server',
+                property_fields: [
+                  { name: 'port', label: 'Port', type: 'text' },
+                  { name: 'status', label: 'Status', type: 'text' },
+                  { name: 'db_name', label: 'Database Name', type: 'text' },
+                  { name: 'username', label: 'Username', type: 'text' },
+                  { name: 'password', label: 'Password', type: 'password' }
+                ]
+              },
+              {
+                id: 'st-3',
+                name: 'API Server',
+                icon: 'code',
+                description: 'REST API server',
+                property_fields: [
+                  { name: 'port', label: 'Port', type: 'text' },
+                  { name: 'status', label: 'Status', type: 'text' },
+                  { name: 'endpoints', label: 'Endpoints', type: 'array' },
+                  { name: 'auth_type', label: 'Authentication Type', type: 'text' }
+                ]
+              }
+            ];
+            setServiceTypes(sampleServiceTypes);
+          } else {
+            // Set empty service types array for non-demo users
+            setServiceTypes([]);
+          }
         } else {
           setServiceTypes(serviceTypeData || []);
         }
@@ -107,9 +189,91 @@ const DashboardContainer = () => {
         console.error('Error loading data:', error);
         setError('An unexpected error occurred. Please try again later.');
 
-        // Set empty arrays for VMs and service types
-        setVms([]);
-        setServiceTypes([]);
+        // Check if we're in demo mode (using the manual Google login)
+        const storedUser = localStorage.getItem('currentUser');
+        if (storedUser && JSON.parse(storedUser).authProvider === 'google') {
+          console.log('Demo mode detected in catch block, using sample data');
+
+          // Create some sample VMs for demo purposes
+          const sampleVMs = [
+            {
+              id: 'sample-1',
+              hostname: 'demo-vm-1',
+              ip_address: '192.168.1.101',
+              admin_user: 'admin',
+              admin_password: 'password123',
+              os: 'Windows',
+              os_version: 'Server 2022',
+              services: [
+                { id: 'svc-1', name: 'Web Server', properties: { port: '80', status: 'running' } },
+                { id: 'svc-2', name: 'Database', properties: { port: '3306', status: 'running' } }
+              ]
+            },
+            {
+              id: 'sample-2',
+              hostname: 'demo-vm-2',
+              ip_address: '192.168.1.102',
+              admin_user: 'admin',
+              admin_password: 'password123',
+              os: 'Linux',
+              os_version: 'Ubuntu 22.04',
+              services: [
+                { id: 'svc-3', name: 'API Server', properties: { port: '8080', status: 'running' } }
+              ]
+            }
+          ];
+
+          // Create some sample service types for demo purposes
+          const sampleServiceTypes = [
+            {
+              id: 'st-1',
+              name: 'Web Server',
+              icon: 'globe',
+              description: 'HTTP/HTTPS web server',
+              property_fields: [
+                { name: 'port', label: 'Port', type: 'text' },
+                { name: 'status', label: 'Status', type: 'text' },
+                { name: 'domain', label: 'Domain Name', type: 'text' },
+                { name: 'ssl', label: 'SSL Enabled', type: 'text' }
+              ]
+            },
+            {
+              id: 'st-2',
+              name: 'Database',
+              icon: 'database',
+              description: 'Database server',
+              property_fields: [
+                { name: 'port', label: 'Port', type: 'text' },
+                { name: 'status', label: 'Status', type: 'text' },
+                { name: 'db_name', label: 'Database Name', type: 'text' },
+                { name: 'username', label: 'Username', type: 'text' },
+                { name: 'password', label: 'Password', type: 'password' }
+              ]
+            },
+            {
+              id: 'st-3',
+              name: 'API Server',
+              icon: 'code',
+              description: 'REST API server',
+              property_fields: [
+                { name: 'port', label: 'Port', type: 'text' },
+                { name: 'status', label: 'Status', type: 'text' },
+                { name: 'endpoints', label: 'Endpoints', type: 'array' },
+                { name: 'auth_type', label: 'Authentication Type', type: 'text' }
+              ]
+            }
+          ];
+
+          setVms(sampleVMs);
+          setServiceTypes(sampleServiceTypes);
+
+          // Hide the error message in demo mode
+          setError(null);
+        } else {
+          // Set empty arrays for non-demo users
+          setVms([]);
+          setServiceTypes([]);
+        }
       } finally {
         setLoading(false);
       }
