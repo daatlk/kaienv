@@ -101,13 +101,17 @@ export const handleAuthCallback = () => {
               const payload = JSON.parse(atob(tokenParts[1]));
               console.log('Extracted user info from token:', payload);
 
-              // Check if the user's email is pre-approved
+              // Check if the user's email is pre-approved (only for Google auth)
               const email = payload.email || '';
-              if (email) {
+              const provider = payload.aud || '';
+              const isGoogleAuth = provider.includes('google') || payload.picture?.includes('googleusercontent.com');
+
+              if (email && isGoogleAuth) {
+                console.log('Google authentication detected, checking if email is pre-approved');
                 const { data: isApproved } = await isEmailPreApproved(email);
 
                 if (!isApproved) {
-                  console.log('User email is not pre-approved:', email);
+                  console.log('Google user email is not pre-approved:', email);
                   // Sign out the user
                   await supabase.auth.signOut();
                   // Clear any stored tokens
@@ -119,7 +123,9 @@ export const handleAuthCallback = () => {
                   return;
                 }
 
-                console.log('User email is pre-approved:', email);
+                console.log('Google user email is pre-approved:', email);
+              } else if (email) {
+                console.log('Non-Google authentication, skipping pre-approval check for:', email);
               }
 
               // Create a user object from the token payload
@@ -141,13 +147,18 @@ export const handleAuthCallback = () => {
         } else if (data?.session) {
           console.log('User authenticated:', data.session.user);
 
-          // Check if the user's email is pre-approved
+          // Check if the user's email is pre-approved (only for Google auth)
           const email = data.session.user.email;
-          if (email) {
+          const provider = data.session.user.app_metadata?.provider || '';
+          const isGoogleAuth = provider === 'google' ||
+                              data.session.user.user_metadata?.picture?.includes('googleusercontent.com');
+
+          if (email && isGoogleAuth) {
+            console.log('Google authentication detected, checking if email is pre-approved');
             const { data: isApproved } = await isEmailPreApproved(email);
 
             if (!isApproved) {
-              console.log('User email is not pre-approved:', email);
+              console.log('Google user email is not pre-approved:', email);
               // Sign out the user
               await supabase.auth.signOut();
               // Clear any stored tokens
@@ -159,7 +170,9 @@ export const handleAuthCallback = () => {
               return;
             }
 
-            console.log('User email is pre-approved:', email);
+            console.log('Google user email is pre-approved:', email);
+          } else if (email) {
+            console.log('Non-Google authentication, skipping pre-approval check for:', email);
           }
 
           // Store the user in localStorage for persistence

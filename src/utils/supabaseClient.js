@@ -43,6 +43,87 @@ const options = {
 // Create a single supabase client for interacting with your database
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, options);
 
+// Create a default admin user if none exists
+const createDefaultAdminIfNeeded = async () => {
+  try {
+    console.log('Checking if default admin user needs to be created...');
+
+    // Check if any users exist
+    const { data: existingUsers, error: usersError } = await supabase
+      .from('profiles')
+      .select('id')
+      .limit(1);
+
+    if (usersError) {
+      console.error('Error checking for existing users:', usersError);
+      return;
+    }
+
+    // If users exist, no need to create default admin
+    if (existingUsers && existingUsers.length > 0) {
+      console.log('Users already exist, no need to create default admin');
+      return;
+    }
+
+    console.log('No users found, creating default admin user...');
+
+    // Create default admin user
+    const defaultEmail = 'admin@example.com';
+    const defaultPassword = 'admin123';
+
+    // First, create the auth user
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: defaultEmail,
+      password: defaultPassword,
+      options: {
+        data: {
+          name: 'Default Admin',
+          role: 'admin'
+        }
+      }
+    });
+
+    if (authError) {
+      console.error('Error creating default admin auth user:', authError);
+      return;
+    }
+
+    if (!authData.user) {
+      console.error('No user returned from auth signup');
+      return;
+    }
+
+    console.log('Created default admin auth user:', authData.user.id);
+
+    // Then create the profile
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert({
+        id: authData.user.id,
+        email: defaultEmail,
+        name: 'Default Admin',
+        role: 'admin',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+
+    if (profileError) {
+      console.error('Error creating default admin profile:', profileError);
+      return;
+    }
+
+    console.log('Successfully created default admin user with email:', defaultEmail);
+    console.log('Default admin password:', defaultPassword);
+    console.log('IMPORTANT: Please change this password after first login!');
+
+  } catch (error) {
+    console.error('Unexpected error creating default admin:', error);
+  }
+};
+
+// Call the function to create default admin if needed
+createDefaultAdminIfNeeded();
+
 // Authentication functions
 export const signUp = async (email, password, userData) => {
   return await supabase.auth.signUp({
@@ -53,7 +134,24 @@ export const signUp = async (email, password, userData) => {
 };
 
 export const signIn = async (email, password) => {
-  return await supabase.auth.signInWithPassword({ email, password });
+  // First, check if this is a valid user in our system
+  try {
+    // Attempt to sign in with the provided credentials
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      console.error('Error during sign in:', error);
+      return { error };
+    }
+
+    return { data, error: null };
+  } catch (error) {
+    console.error('Unexpected error during sign in:', error);
+    return { error };
+  }
 };
 
 export const signInWithGoogle = async () => {

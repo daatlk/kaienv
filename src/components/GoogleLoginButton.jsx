@@ -96,7 +96,7 @@ const GoogleLoginButton = () => {
         <p className="text-muted small">
           Sign in with your Google account to access the dashboard.
           <br />
-          <strong>Note:</strong> Your Google account must be pre-approved by an administrator.
+          <strong>Note:</strong> Google accounts must be pre-approved by an administrator.
         </p>
       </div>
     </div>

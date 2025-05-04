@@ -179,6 +179,12 @@ const Login = () => {
             New to Kaizens Group? <a href="#" className="sign-up-link">Sign up!</a>
           </div>
 
+          <div className="mt-3 text-center">
+            <p className="text-muted small">
+              First time? Use admin@example.com / admin123 to log in, then change the password.
+            </p>
+          </div>
+
           <div className="footer-text">
             <div className="mb-2">Copyright © 2025 Kaizens Group - All Rights Reserved.</div>
             <div>

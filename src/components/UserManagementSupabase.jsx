@@ -472,7 +472,7 @@ const UserManagement = () => {
 
             <Alert variant="info" className="mb-3">
               <strong>Google Authentication:</strong> Adding a user here with their email address will pre-approve them for Google sign-in.
-              Only users with pre-approved email addresses can sign in with Google.
+              Only users with pre-approved email addresses can sign in with Google. Regular email/password login does not require pre-approval.
             </Alert>
 
             <Form.Group className="mb-3" controlId="email">
