@@ -179,14 +179,6 @@ const Login = () => {
             New to Kaizens Group? <a href="#" className="sign-up-link">Sign up!</a>
           </div>
 
-          <div className="mt-4 text-center">
-            <p className="text-muted small">
-              Demo credentials:<br />
-              Admin: admin@example.com / admin123<br />
-              User: user@example.com / user123
-            </p>
-          </div>
-
           <div className="footer-text">
             <div className="mb-2">Copyright © 2025 Kaizens Group - All Rights Reserved.</div>
             <div>
