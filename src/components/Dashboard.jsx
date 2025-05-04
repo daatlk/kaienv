@@ -7,7 +7,6 @@ import {
   faEdit,
   faTrash,
   faServer,
-  faLock,
   faCheck,
   faNetworkWired,
   faUser,
@@ -18,9 +17,7 @@ import {
   faObjectGroup,
   faFilter,
   faExchangeAlt,
-  faInfoCircle,
-  faPencilAlt,
-  faEye
+  faInfoCircle
 } from '@fortawesome/free-solid-svg-icons';
 import OSBadge from './OSBadge';
 import ServiceBadge from './ServiceBadge';
@@ -28,6 +25,7 @@ import VMModal from './VMModal';
 import VMGroupModal from './VMGroupModal';
 import BulkMoveModal from './BulkMoveModal';
 import { useAuth } from '../context/AuthContext';
+import { useEditMode } from '../context/EditModeContext';
 
 const Dashboard = ({
   vms,
@@ -51,8 +49,8 @@ const Dashboard = ({
   const [successMessage, setSuccessMessage] = useState(null);
   const [selectedVMs, setSelectedVMs] = useState([]);
   const [filterGroupId, setFilterGroupId] = useState('all'); // 'all' or a group ID
-  const [editMode, setEditMode] = useState(false); // Toggle for edit mode
   const { isAdmin } = useAuth();
+  const { editMode } = useEditMode();
   const navigate = useNavigate();
 
   // Filter VMs based on selected group
@@ -429,22 +427,8 @@ const Dashboard = ({
           <h2>VM Inventory</h2>
         </Col>
         <Col xs="auto">
-          {isAdmin() && (
+          {isAdmin() && editMode && (
             <div className="d-flex">
-              {/* Edit Mode Toggle Button */}
-              <Button
-                variant={editMode ? "outline-secondary" : "outline-primary"}
-                onClick={() => setEditMode(!editMode)}
-                className="me-2"
-                title={editMode ? "Exit Edit Mode" : "Enter Edit Mode"}
-              >
-                <FontAwesomeIcon
-                  icon={editMode ? faEye : faPencilAlt}
-                  className="me-2"
-                />
-                {editMode ? "View Mode" : "Edit Mode"}
-              </Button>
-
               <Button
                 variant="outline-primary"
                 onClick={handleAddGroup}

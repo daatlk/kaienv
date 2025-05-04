@@ -120,3 +120,11 @@ button:focus-visible {
   grid-template-columns: repeat(3, 1fr);
   gap: 0.5rem;
 }
+
+/* Nav Button Styles */
+.nav-button {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+}

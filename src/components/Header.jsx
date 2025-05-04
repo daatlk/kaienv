@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navbar, Container, Nav, NavDropdown } from 'react-bootstrap';
+import { Navbar, Container, Nav, NavDropdown, Button } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -8,12 +8,16 @@ import {
   faUserCog,
   faUserShield,
   faUser,
-  faUsers
+  faUsers,
+  faCog,
+  faEye
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../context/AuthContext';
+import { useEditMode } from '../context/EditModeContext';
 
 const Header = () => {
   const { currentUser, logout, isAdmin } = useAuth();
+  const { editMode, toggleEditMode } = useEditMode();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -35,10 +39,26 @@ const Header = () => {
             <Navbar.Collapse id="basic-navbar-nav" className="justify-content-end">
               <Nav>
                 {isAdmin() && (
-                  <Nav.Link as={Link} to="/users">
-                    <FontAwesomeIcon icon={faUsers} className="me-1" />
-                    User Management
-                  </Nav.Link>
+                  <>
+                    <Button
+                      variant={editMode ? "outline-secondary" : "outline-primary"}
+                      onClick={toggleEditMode}
+                      className="me-2 nav-button"
+                      title={editMode ? "Exit Edit Mode" : "Enter Edit Mode"}
+                      size="sm"
+                    >
+                      <FontAwesomeIcon
+                        icon={editMode ? faEye : faCog}
+                        className="me-2"
+                      />
+                      {editMode ? "View Mode" : "Settings"}
+                    </Button>
+
+                    <Nav.Link as={Link} to="/users">
+                      <FontAwesomeIcon icon={faUsers} className="me-1" />
+                      User Management
+                    </Nav.Link>
+                  </>
                 )}
                 <NavDropdown
                   title={

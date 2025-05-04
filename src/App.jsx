@@ -25,6 +25,7 @@ import {
   moveVMsToGroup
 } from './utils/supabaseClient'
 import { AuthProvider, useAuth, ProtectedRoute, AdminRoute } from './context/AuthContext'
+import { EditModeProvider } from './context/EditModeContext'
 import { initAuthCallbackHandler } from './utils/authCallback'
 
 // Main dashboard component with VM management functionality
@@ -523,18 +524,19 @@ function App() {
 
   return (
     <AuthProvider>
-      <Router>
-        <Container fluid className="p-0">
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <DashboardContainer />
-                </ProtectedRoute>
-              }
-            />
+      <EditModeProvider>
+        <Router>
+          <Container fluid className="p-0">
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <DashboardContainer />
+                  </ProtectedRoute>
+                }
+              />
             <Route
               path="/users"
               element={
@@ -574,6 +576,7 @@ function App() {
           </Routes>
         </Container>
       </Router>
+      </EditModeProvider>
     </AuthProvider>
   )
 }
