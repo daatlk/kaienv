@@ -19,6 +19,7 @@ import {
   deleteVM as deleteVMFromSupabase
 } from './utils/supabaseClient'
 import { AuthProvider, useAuth, ProtectedRoute, AdminRoute } from './context/AuthContext'
+import { initAuthCallbackHandler } from './utils/authCallback'
 
 // Main dashboard component with VM management functionality
 const DashboardContainer = () => {
@@ -238,6 +239,23 @@ const ServiceDetailsPageContainer = () => {
 
 // Main App component with routing
 function App() {
+  // Initialize the auth callback handler
+  // This will check if the current URL is an authentication callback
+  // and redirect to the correct URL if needed
+  useEffect(() => {
+    // Check if this is an authentication callback
+    const isHandled = initAuthCallbackHandler();
+
+    if (isHandled) {
+      console.log('Authentication callback handled. Redirecting...');
+      // If the callback was handled, we don't need to render the app
+      // The user will be redirected to the correct URL
+      return;
+    }
+
+    console.log('Not an authentication callback or already handled.');
+  }, []);
+
   return (
     <AuthProvider>
       <Router>

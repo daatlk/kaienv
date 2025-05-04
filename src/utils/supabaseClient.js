@@ -60,43 +60,27 @@ export const signIn = async (email, password) => {
 };
 
 export const signInWithGoogle = async () => {
-  // Get the current origin safely
-  let redirectUrl;
+  // Always use the production URL for the redirect
+  // This is the most reliable approach to ensure consistent authentication behavior
+  const redirectUrl = 'https://v0-kaienv.vercel.app/dashboard';
 
-  // Check if we're in a production environment
-  const isProduction =
-    window.location.hostname !== 'localhost' &&
-    window.location.hostname !== '127.0.0.1';
+  console.log('Using fixed production redirect URL:', redirectUrl);
 
-  if (isProduction) {
-    // For production, use the deployed URL
-    try {
-      // Try to get the current origin
-      redirectUrl = `${window.location.origin}/dashboard`;
+  // Store the redirect URL in localStorage so we can check it after authentication
+  localStorage.setItem('auth_redirect_url', redirectUrl);
 
-      // Check if the origin is valid
-      if (!redirectUrl || redirectUrl === 'null/dashboard' || redirectUrl === 'undefined/dashboard') {
-        throw new Error('Invalid window.location.origin');
-      }
+  // Configure Supabase auth to use the production URL for site URL
+  // This is a more direct way to control the redirect behavior
+  const { error: configError } = await supabase.auth.setSession({
+    access_token: null,
+    refresh_token: null
+  });
 
-      console.log('Using production redirect URL:', redirectUrl);
-    } catch (error) {
-      console.error('Error getting production origin:', error);
-
-      // Fallback to hardcoded production URL
-      redirectUrl = 'https://v0-kaienv.vercel.app/dashboard';
-      console.log('Using hardcoded production URL:', redirectUrl);
-    }
-  } else {
-    // For local development, use the Vercel preview URL or production URL
-    // This ensures we don't redirect back to localhost after authentication
-    redirectUrl = 'https://v0-kaienv.vercel.app/dashboard';
-    console.log('Development environment detected. Using production redirect URL:', redirectUrl);
+  if (configError) {
+    console.error('Error configuring auth session:', configError);
   }
 
-  // Log the final redirect URL for debugging
-  console.log('Final Google auth redirect URL:', redirectUrl);
-
+  // Initiate the OAuth flow with Google
   return await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
