@@ -2,7 +2,7 @@
  * Helper function to handle authentication callbacks
  * This is used to redirect the user to the correct URL after authentication
  */
-import { supabase } from './supabaseClient';
+import { supabase, isEmailPreApproved } from './supabaseClient';
 
 // Function to extract hash parameters from URL
 export const getHashParams = () => {
@@ -90,7 +90,7 @@ export const handleAuthCallback = () => {
 
         // Now get the session to verify it worked
         return supabase.auth.getSession();
-      }).then(({ data, error }) => {
+      }).then(async ({ data, error }) => {
         if (error) {
           console.error('Error getting session after setting tokens:', error);
           // Try to get user info from the token directly
@@ -100,6 +100,27 @@ export const handleAuthCallback = () => {
             if (tokenParts.length === 3) {
               const payload = JSON.parse(atob(tokenParts[1]));
               console.log('Extracted user info from token:', payload);
+
+              // Check if the user's email is pre-approved
+              const email = payload.email || '';
+              if (email) {
+                const { data: isApproved } = await isEmailPreApproved(email);
+
+                if (!isApproved) {
+                  console.log('User email is not pre-approved:', email);
+                  // Sign out the user
+                  await supabase.auth.signOut();
+                  // Clear any stored tokens
+                  localStorage.removeItem('supabase.auth.token');
+                  localStorage.removeItem('currentUser');
+                  // Redirect to login with error message
+                  localStorage.setItem('auth_error', 'Your Google account is not authorized. Please contact an administrator to get access.');
+                  window.location.href = '/login?error=unauthorized';
+                  return;
+                }
+
+                console.log('User email is pre-approved:', email);
+              }
 
               // Create a user object from the token payload
               const userObj = {
@@ -120,6 +141,27 @@ export const handleAuthCallback = () => {
         } else if (data?.session) {
           console.log('User authenticated:', data.session.user);
 
+          // Check if the user's email is pre-approved
+          const email = data.session.user.email;
+          if (email) {
+            const { data: isApproved } = await isEmailPreApproved(email);
+
+            if (!isApproved) {
+              console.log('User email is not pre-approved:', email);
+              // Sign out the user
+              await supabase.auth.signOut();
+              // Clear any stored tokens
+              localStorage.removeItem('supabase.auth.token');
+              localStorage.removeItem('currentUser');
+              // Redirect to login with error message
+              localStorage.setItem('auth_error', 'Your Google account is not authorized. Please contact an administrator to get access.');
+              window.location.href = '/login?error=unauthorized';
+              return;
+            }
+
+            console.log('User email is pre-approved:', email);
+          }
+
           // Store the user in localStorage for persistence
           const userObj = {
             id: data.session.user.id,
@@ -134,18 +176,10 @@ export const handleAuthCallback = () => {
           localStorage.setItem('currentUser', JSON.stringify(userObj));
         } else {
           console.error('No session found after setting tokens');
-          // Try to create a minimal user object
-          const userObj = {
-            id: 'user-' + Math.random().toString(36).substring(2, 15),
-            email: 'user@example.com',
-            name: 'Authenticated User',
-            role: 'user',
-            authProvider: 'google',
-            picture: null
-          };
-
-          console.log('Created fallback user object:', userObj);
-          localStorage.setItem('currentUser', JSON.stringify(userObj));
+          // Redirect to login with error message
+          localStorage.setItem('auth_error', 'Authentication failed. Please try again or contact an administrator.');
+          window.location.href = '/login?error=failed';
+          return;
         }
 
         // Redirect to the dashboard

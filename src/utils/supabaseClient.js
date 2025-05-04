@@ -124,6 +124,35 @@ export const getUserProfile = async (userId) => {
     .single();
 };
 
+// Check if an email is pre-approved (exists in the profiles table)
+export const isEmailPreApproved = async (email) => {
+  if (!email) return { data: false, error: new Error('Email is required') };
+
+  try {
+    console.log('Checking if email is pre-approved:', email);
+
+    // Check if the email exists in the profiles table
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, email')
+      .eq('email', email.toLowerCase())
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error checking if email is pre-approved:', error);
+      return { data: false, error };
+    }
+
+    const isApproved = !!data;
+    console.log('Email pre-approval check result:', isApproved);
+
+    return { data: isApproved, error: null };
+  } catch (error) {
+    console.error('Unexpected error checking email approval:', error);
+    return { data: false, error };
+  }
+};
+
 export const updateUserProfile = async (userId, userData) => {
   return await supabase
     .from('profiles')

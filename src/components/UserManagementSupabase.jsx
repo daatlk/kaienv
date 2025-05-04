@@ -334,7 +334,10 @@ const UserManagement = () => {
     <div>
       <Card className="mb-4">
         <Card.Header className="d-flex justify-content-between align-items-center">
-          <h4 className="mb-0">User Management</h4>
+          <div>
+            <h4 className="mb-0">User Management</h4>
+            <small className="text-muted">Manage users and pre-approve Google sign-in access</small>
+          </div>
           <Button variant="primary" onClick={handleAddUser}>
             <FontAwesomeIcon icon={faPlus} className="me-2" />
             Add User
@@ -467,6 +470,11 @@ const UserManagement = () => {
           <Modal.Body>
             {error && <Alert variant="danger">{error}</Alert>}
 
+            <Alert variant="info" className="mb-3">
+              <strong>Google Authentication:</strong> Adding a user here with their email address will pre-approve them for Google sign-in.
+              Only users with pre-approved email addresses can sign in with Google.
+            </Alert>
+
             <Form.Group className="mb-3" controlId="email">
               <Form.Label>Email</Form.Label>
               <Form.Control
@@ -476,6 +484,9 @@ const UserManagement = () => {
                 onChange={handleChange}
                 required
               />
+              <Form.Text className="text-muted">
+                This email must match the Google account the user will sign in with.
+              </Form.Text>
             </Form.Group>
 
             <Form.Group className="mb-3" controlId="password">

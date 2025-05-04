@@ -39,6 +39,28 @@ const Login = () => {
       return;
     }
 
+    // Check for authentication errors
+    const authError = localStorage.getItem('auth_error');
+    if (authError) {
+      console.log("Login: Found authentication error:", authError);
+      setError(authError);
+      localStorage.removeItem('auth_error');
+      return;
+    }
+
+    // Check URL parameters for errors
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlError = urlParams.get('error');
+    if (urlError === 'unauthorized') {
+      console.log("Login: Unauthorized error from URL parameter");
+      setError('Your Google account is not authorized. Please contact an administrator to get access.');
+      return;
+    } else if (urlError === 'failed') {
+      console.log("Login: Authentication failed error from URL parameter");
+      setError('Authentication failed. Please try again or contact an administrator.');
+      return;
+    }
+
     // Check if we have a user in context
     if (currentUser) {
       console.log("Login: User already authenticated in context, redirecting to dashboard");
