@@ -22,6 +22,10 @@ export default defineConfig({
     // Ensure proper host for development
     host: '0.0.0.0',
     // Add CORS headers for development
-    cors: true
+    cors: true,
+    // Add CSP headers for development
+    headers: {
+      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://*.supabase.co https://accounts.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.googleusercontent.com https://*.supabase.co; font-src 'self' data:; frame-src 'self' https://accounts.google.com https://*.supabase.co;"
+    }
   }
 })
