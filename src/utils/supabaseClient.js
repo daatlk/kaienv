@@ -434,7 +434,23 @@ export const deleteUser = async (userId) => {
   try {
     console.log('Deleting user with ID:', userId);
 
-    // First, verify the user exists
+    // First, try using our new RPC function
+    try {
+      const { data, error: rpcError } = await supabase.rpc('delete_user_by_id', {
+        user_id: userId
+      });
+
+      if (!rpcError && data === true) {
+        console.log('User deleted successfully via delete_user_by_id RPC');
+        return { data: { success: true, method: 'rpc_delete_user_by_id' }, error: null };
+      }
+
+      console.log('RPC delete_user_by_id failed or returned false:', rpcError || 'Function returned false');
+    } catch (rpcError) {
+      console.error('Error calling delete_user_by_id RPC:', rpcError);
+    }
+
+    // If RPC fails, verify the user exists in profiles
     const { data: userExists, error: checkError } = await supabase
       .from('profiles')
       .select('id')
@@ -442,62 +458,89 @@ export const deleteUser = async (userId) => {
       .single();
 
     if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "not found" which is fine
-      console.error('Error checking if user exists:', checkError);
-      return { error: checkError };
+      console.error('Error checking if user exists in profiles:', checkError);
+      // Continue anyway - the user might exist in auth.users but not in profiles
     }
 
-    if (!userExists) {
-      console.warn('User not found, nothing to delete:', userId);
-      return { data: { success: true, message: 'User not found' }, error: null };
-    }
-
-    console.log('User found, proceeding with deletion');
+    console.log('Proceeding with deletion, profile exists:', !!userExists);
 
     // Try multiple approaches to ensure deletion works
 
-    // Approach 1: Direct SQL query via RPC (most reliable)
-    const { error: rpcError } = await supabase.rpc('delete_user_by_id_force', {
-      user_id_param: userId
-    });
-
-    if (!rpcError) {
-      console.log('User deleted successfully via RPC');
-      return { data: { success: true }, error: null };
-    }
-
-    console.error('RPC deletion failed, trying standard delete:', rpcError);
-
-    // Approach 2: Standard delete
-    const { error } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', userId);
-
-    if (error) {
-      console.error('Error deleting user profile via standard delete:', error);
-
-      // Approach 3: Last resort - mark as deleted instead of actually deleting
-      console.log('Trying to mark user as deleted instead');
-      const { error: updateError } = await supabase
+    // First delete from profiles if it exists
+    if (userExists) {
+      const { error: profileDeleteError } = await supabase
         .from('profiles')
-        .update({
-          is_deleted: true,
-          deleted_at: new Date().toISOString(),
-          email: `deleted_${Date.now()}_${userId}` // Ensure email uniqueness
-        })
+        .delete()
         .eq('id', userId);
 
-      if (updateError) {
-        console.error('Failed to mark user as deleted:', updateError);
-        return { error: updateError };
+      if (profileDeleteError) {
+        console.error('Error deleting profile:', profileDeleteError);
+        // Continue anyway - we'll try to delete from auth.users
+      } else {
+        console.log('Profile deleted successfully');
       }
-
-      console.log('User marked as deleted successfully');
-      return { data: { success: true, method: 'marked_as_deleted' }, error: null };
     }
 
-    console.log('User profile deleted successfully via standard delete');
-    return { data: { success: true, method: 'standard_delete' }, error: null };
+    // Now try to delete from auth.users using our force delete function
+    try {
+      const { error: forceError } = await supabase.rpc('force_delete_user_by_id', {
+        user_id: userId
+      });
+
+      if (!forceError) {
+        console.log('User deleted successfully via force_delete_user_by_id RPC');
+        return { data: { success: true, method: 'rpc_force_delete' }, error: null };
+      }
+
+      console.error('Force delete RPC failed:', forceError);
+    } catch (forceError) {
+      console.error('Error calling force_delete_user_by_id RPC:', forceError);
+    }
+
+    // If all else fails, try the original delete_user_by_id_force function
+    try {
+      const { error: legacyRpcError } = await supabase.rpc('delete_user_by_id_force', {
+        user_id_param: userId
+      });
+
+      if (!legacyRpcError) {
+        console.log('User deleted successfully via legacy delete_user_by_id_force RPC');
+        return { data: { success: true, method: 'legacy_rpc' }, error: null };
+      }
+
+      console.error('Legacy RPC deletion failed:', legacyRpcError);
+    } catch (legacyError) {
+      console.error('Error calling legacy delete function:', legacyError);
+    }
+
+    // Last resort - mark as deleted if profile exists
+    if (userExists) {
+      try {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            is_deleted: true,
+            deleted_at: new Date().toISOString()
+          })
+          .eq('id', userId);
+
+        if (!updateError) {
+          console.log('User marked as deleted successfully');
+          return { data: { success: true, method: 'marked_as_deleted' }, error: null };
+        }
+
+        console.error('Failed to mark user as deleted:', updateError);
+      } catch (updateError) {
+        console.error('Error marking user as deleted:', updateError);
+      }
+    }
+
+    // If we got here, all deletion methods failed
+    return {
+      error: {
+        message: 'All deletion methods failed. The user might still exist in auth.users but not in profiles.'
+      }
+    };
   } catch (error) {
     console.error('Unexpected error deleting user:', error);
     return { error: { message: 'Unexpected error deleting user' } };
