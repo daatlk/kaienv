@@ -74,41 +74,12 @@ const DashboardContainer = () => {
           // If it's an authentication error, show a more specific message
           if (vmError.message === 'Invalid API key') {
             setError('Authentication error. Please try logging out and logging in again.');
-
-            // Create some sample VMs for demo purposes
-            const sampleVMs = [
-              {
-                id: 'sample-1',
-                hostname: 'sample-vm-1',
-                ip_address: '192.168.1.101',
-                admin_user: 'admin',
-                admin_password: 'password123',
-                os: 'Windows',
-                os_version: 'Server 2022',
-                services: [
-                  { id: 'svc-1', name: 'Web Server', properties: { port: '80', status: 'running' } },
-                  { id: 'svc-2', name: 'Database', properties: { port: '3306', status: 'running' } }
-                ]
-              },
-              {
-                id: 'sample-2',
-                hostname: 'sample-vm-2',
-                ip_address: '192.168.1.102',
-                admin_user: 'admin',
-                admin_password: 'password123',
-                os: 'Linux',
-                os_version: 'Ubuntu 22.04',
-                services: [
-                  { id: 'svc-3', name: 'API Server', properties: { port: '8080', status: 'running' } }
-                ]
-              }
-            ];
-
-            setVms(sampleVMs);
-            console.log('Using sample VMs for demo purposes');
           } else {
             setError('Failed to load VMs. Please try again later.');
           }
+
+          // Set empty VMs array
+          setVms([]);
         } else {
           setVms(vmData || []);
         }
@@ -118,66 +89,17 @@ const DashboardContainer = () => {
         if (serviceTypeError) {
           console.error('Error loading service types:', serviceTypeError);
 
-          // If it's an authentication error, use sample service types
+          // If it's an authentication error, show a more specific message
           if (serviceTypeError.message === 'Invalid API key') {
-            // Create some sample service types for demo purposes
-            const sampleServiceTypes = [
-              {
-                id: 'st-1',
-                name: 'Web Server',
-                icon: 'globe',
-                description: 'HTTP/HTTPS web server',
-                property_fields: [
-                  { name: 'port', label: 'Port', type: 'text' },
-                  { name: 'status', label: 'Status', type: 'text' },
-                  { name: 'domain', label: 'Domain Name', type: 'text' },
-                  { name: 'ssl', label: 'SSL Enabled', type: 'text' }
-                ]
-              },
-              {
-                id: 'st-2',
-                name: 'Database',
-                icon: 'database',
-                description: 'Database server',
-                property_fields: [
-                  { name: 'port', label: 'Port', type: 'text' },
-                  { name: 'status', label: 'Status', type: 'text' },
-                  { name: 'db_name', label: 'Database Name', type: 'text' },
-                  { name: 'username', label: 'Username', type: 'text' },
-                  { name: 'password', label: 'Password', type: 'password' }
-                ]
-              },
-              {
-                id: 'st-3',
-                name: 'API Server',
-                icon: 'code',
-                description: 'REST API server',
-                property_fields: [
-                  { name: 'port', label: 'Port', type: 'text' },
-                  { name: 'status', label: 'Status', type: 'text' },
-                  { name: 'endpoints', label: 'Endpoints', type: 'array' },
-                  { name: 'auth_type', label: 'Authentication Type', type: 'text' }
-                ]
-              },
-              {
-                id: 'st-4',
-                name: 'File Server',
-                icon: 'folder',
-                description: 'File storage server',
-                property_fields: [
-                  { name: 'port', label: 'Port', type: 'text' },
-                  { name: 'status', label: 'Status', type: 'text' },
-                  { name: 'path', label: 'Storage Path', type: 'text' },
-                  { name: 'quota', label: 'Storage Quota (GB)', type: 'text' }
-                ]
-              }
-            ];
-
-            setServiceTypes(sampleServiceTypes);
-            console.log('Using sample service types for demo purposes');
+            if (!error) {
+              setError('Authentication error. Please try logging out and logging in again.');
+            }
           } else if (!error) {
             setError('Failed to load service types. Please try again later.');
           }
+
+          // Set empty service types array
+          setServiceTypes([]);
         } else {
           setServiceTypes(serviceTypeData || []);
         }
@@ -185,90 +107,9 @@ const DashboardContainer = () => {
         console.error('Error loading data:', error);
         setError('An unexpected error occurred. Please try again later.');
 
-        // Create sample data for demo purposes
-        const sampleVMs = [
-          {
-            id: 'sample-1',
-            hostname: 'sample-vm-1',
-            ip_address: '192.168.1.101',
-            admin_user: 'admin',
-            admin_password: 'password123',
-            os: 'Windows',
-            os_version: 'Server 2022',
-            services: [
-              { id: 'svc-1', name: 'Web Server', properties: { port: '80', status: 'running' } },
-              { id: 'svc-2', name: 'Database', properties: { port: '3306', status: 'running' } }
-            ]
-          },
-          {
-            id: 'sample-2',
-            hostname: 'sample-vm-2',
-            ip_address: '192.168.1.102',
-            admin_user: 'admin',
-            admin_password: 'password123',
-            os: 'Linux',
-            os_version: 'Ubuntu 22.04',
-            services: [
-              { id: 'svc-3', name: 'API Server', properties: { port: '8080', status: 'running' } }
-            ]
-          }
-        ];
-
-        const sampleServiceTypes = [
-          {
-            id: 'st-1',
-            name: 'Web Server',
-            icon: 'globe',
-            description: 'HTTP/HTTPS web server',
-            property_fields: [
-              { name: 'port', label: 'Port', type: 'text' },
-              { name: 'status', label: 'Status', type: 'text' },
-              { name: 'domain', label: 'Domain Name', type: 'text' },
-              { name: 'ssl', label: 'SSL Enabled', type: 'text' }
-            ]
-          },
-          {
-            id: 'st-2',
-            name: 'Database',
-            icon: 'database',
-            description: 'Database server',
-            property_fields: [
-              { name: 'port', label: 'Port', type: 'text' },
-              { name: 'status', label: 'Status', type: 'text' },
-              { name: 'db_name', label: 'Database Name', type: 'text' },
-              { name: 'username', label: 'Username', type: 'text' },
-              { name: 'password', label: 'Password', type: 'password' }
-            ]
-          },
-          {
-            id: 'st-3',
-            name: 'API Server',
-            icon: 'code',
-            description: 'REST API server',
-            property_fields: [
-              { name: 'port', label: 'Port', type: 'text' },
-              { name: 'status', label: 'Status', type: 'text' },
-              { name: 'endpoints', label: 'Endpoints', type: 'array' },
-              { name: 'auth_type', label: 'Authentication Type', type: 'text' }
-            ]
-          },
-          {
-            id: 'st-4',
-            name: 'File Server',
-            icon: 'folder',
-            description: 'File storage server',
-            property_fields: [
-              { name: 'port', label: 'Port', type: 'text' },
-              { name: 'status', label: 'Status', type: 'text' },
-              { name: 'path', label: 'Storage Path', type: 'text' },
-              { name: 'quota', label: 'Storage Quota (GB)', type: 'text' }
-            ]
-          }
-        ];
-
-        setVms(sampleVMs);
-        setServiceTypes(sampleServiceTypes);
-        console.log('Using sample data for demo purposes');
+        // Set empty arrays for VMs and service types
+        setVms([]);
+        setServiceTypes([]);
       } finally {
         setLoading(false);
       }

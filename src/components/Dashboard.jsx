@@ -205,8 +205,27 @@ const Dashboard = ({
       {vms.length === 0 ? (
         <Card className="text-center p-5">
           <Card.Body>
-            <h4>No VMs found</h4>
-            <p>Click the "Add VM" button to add your first VM.</p>
+            <FontAwesomeIcon icon={faServer} className="text-muted mb-3" size="4x" />
+            <h4>No VMs Available</h4>
+            {isAdmin() ? (
+              <>
+                <p>There are no virtual machines in the system or we couldn't retrieve them.</p>
+                <p>You can add a new VM by clicking the "Add VM" button above.</p>
+                <Button
+                  variant="primary"
+                  onClick={handleAddVM}
+                  className="mt-3"
+                >
+                  <FontAwesomeIcon icon={faPlus} className="me-2" />
+                  Add Your First VM
+                </Button>
+              </>
+            ) : (
+              <>
+                <p>There are no virtual machines available or we couldn't retrieve them.</p>
+                <p>Please contact your administrator if you believe this is an error.</p>
+              </>
+            )}
           </Card.Body>
         </Card>
       ) : (
