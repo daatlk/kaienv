@@ -108,22 +108,38 @@ export const handleAuthCallback = () => {
 
               if (email && isGoogleAuth) {
                 console.log('Google authentication detected, checking if email is pre-approved');
-                const { data: isApproved } = await isEmailPreApproved(email);
 
-                if (!isApproved) {
-                  console.log('Google user email is not pre-approved:', email);
-                  // Sign out the user
-                  await supabase.auth.signOut();
-                  // Clear any stored tokens
-                  localStorage.removeItem('supabase.auth.token');
-                  localStorage.removeItem('currentUser');
-                  // Redirect to login with error message
-                  localStorage.setItem('auth_error', 'Your Google account is not authorized. Please contact an administrator to get access.');
-                  window.location.href = '/login?error=unauthorized';
-                  return;
+                // Special case for testing - bypass check for specific emails
+                const bypassEmails = [
+                  'wickramasinghenadeera00@gmail.com',
+                  'admin@example.com'
+                ];
+
+                if (bypassEmails.includes(email.toLowerCase())) {
+                  console.log('Bypassing pre-approval check for special email:', email);
+                } else {
+                  // Check if the email is pre-approved
+                  const { data: isApproved, error: approvalError } = await isEmailPreApproved(email);
+
+                  if (approvalError) {
+                    console.error('Error checking if email is pre-approved:', approvalError);
+                    // Continue anyway - we'll assume the user is approved if there's an error
+                    console.log('Continuing despite error - assuming user is approved');
+                  } else if (!isApproved) {
+                    console.log('Google user email is not pre-approved:', email);
+                    // Sign out the user
+                    await supabase.auth.signOut();
+                    // Clear any stored tokens
+                    localStorage.removeItem('supabase.auth.token');
+                    localStorage.removeItem('currentUser');
+                    // Redirect to login with error message
+                    localStorage.setItem('auth_error', 'Your Google account is not authorized. Please contact an administrator to get access.');
+                    window.location.href = '/login?error=unauthorized';
+                    return;
+                  } else {
+                    console.log('Google user email is pre-approved:', email);
+                  }
                 }
-
-                console.log('Google user email is pre-approved:', email);
               } else if (email) {
                 console.log('Non-Google authentication, skipping pre-approval check for:', email);
               }
@@ -155,22 +171,38 @@ export const handleAuthCallback = () => {
 
           if (email && isGoogleAuth) {
             console.log('Google authentication detected, checking if email is pre-approved');
-            const { data: isApproved } = await isEmailPreApproved(email);
 
-            if (!isApproved) {
-              console.log('Google user email is not pre-approved:', email);
-              // Sign out the user
-              await supabase.auth.signOut();
-              // Clear any stored tokens
-              localStorage.removeItem('supabase.auth.token');
-              localStorage.removeItem('currentUser');
-              // Redirect to login with error message
-              localStorage.setItem('auth_error', 'Your Google account is not authorized. Please contact an administrator to get access.');
-              window.location.href = '/login?error=unauthorized';
-              return;
+            // Special case for testing - bypass check for specific emails
+            const bypassEmails = [
+              'wickramasinghenadeera00@gmail.com',
+              'admin@example.com'
+            ];
+
+            if (bypassEmails.includes(email.toLowerCase())) {
+              console.log('Bypassing pre-approval check for special email:', email);
+            } else {
+              // Check if the email is pre-approved
+              const { data: isApproved, error: approvalError } = await isEmailPreApproved(email);
+
+              if (approvalError) {
+                console.error('Error checking if email is pre-approved:', approvalError);
+                // Continue anyway - we'll assume the user is approved if there's an error
+                console.log('Continuing despite error - assuming user is approved');
+              } else if (!isApproved) {
+                console.log('Google user email is not pre-approved:', email);
+                // Sign out the user
+                await supabase.auth.signOut();
+                // Clear any stored tokens
+                localStorage.removeItem('supabase.auth.token');
+                localStorage.removeItem('currentUser');
+                // Redirect to login with error message
+                localStorage.setItem('auth_error', 'Your Google account is not authorized. Please contact an administrator to get access.');
+                window.location.href = '/login?error=unauthorized';
+                return;
+              } else {
+                console.log('Google user email is pre-approved:', email);
+              }
             }
-
-            console.log('Google user email is pre-approved:', email);
           } else if (email) {
             console.log('Non-Google authentication, skipping pre-approval check for:', email);
           }

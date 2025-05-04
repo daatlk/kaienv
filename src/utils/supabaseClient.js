@@ -222,32 +222,115 @@ export const getUserProfile = async (userId) => {
     .single();
 };
 
-// Check if an email is pre-approved (exists in the profiles table)
+// Check if an email is pre-approved (exists in auth.users with a corresponding profile)
 export const isEmailPreApproved = async (email) => {
   if (!email) return { data: false, error: new Error('Email is required') };
 
   try {
     console.log('Checking if email is pre-approved:', email);
 
-    // Check if the email exists in the profiles table
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id, email')
-      .eq('email', email.toLowerCase())
-      .maybeSingle();
+    // First, try to find the user in auth.users by email
+    // Note: This approach might not work depending on your Supabase version and permissions
+    let user = null;
+    let authError = null;
 
-    if (error) {
-      console.error('Error checking if email is pre-approved:', error);
-      return { data: false, error };
+    try {
+      // Try using the admin API if available
+      const response = await supabase.auth.admin.listUsers({
+        filter: {
+          email: email.toLowerCase()
+        }
+      });
+
+      if (response.error) {
+        authError = response.error;
+      } else if (response.data && response.data.users && response.data.users.length > 0) {
+        user = response.data.users[0];
+      }
+    } catch (e) {
+      console.log('Admin API not available, will try alternative methods:', e);
+      authError = e;
     }
 
-    const isApproved = !!data;
+    if (authError) {
+      console.error('Error finding user by email in auth.users:', authError);
+
+      // Alternative approach if admin API is not available
+      console.log('Trying alternative approach to find user...');
+
+      // Use a custom query to find the user
+      const { data: users, error: queryError } = await supabase
+        .rpc('find_user_by_email', { email_to_find: email.toLowerCase() });
+
+      if (queryError || !users || users.length === 0) {
+        console.error('Error or no results from find_user_by_email:', queryError);
+        return { data: false, error: queryError || new Error('User not found') };
+      }
+
+      // Check if the user has a profile
+      const userId = users[0].id;
+      console.log('Found user ID from custom query:', userId);
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (profileError) {
+        console.error('Error checking for profile:', profileError);
+        return { data: false, error: profileError };
+      }
+
+      const isApproved = !!profile;
+      console.log('Email pre-approval check result (alternative method):', isApproved);
+
+      return { data: isApproved, error: null };
+    }
+
+    if (!user) {
+      console.log('No user found with email:', email);
+      return { data: false, error: null };
+    }
+
+    console.log('Found user in auth.users:', user.id);
+
+    // Now check if this user has a profile
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      console.error('Error checking for profile:', profileError);
+      return { data: false, error: profileError };
+    }
+
+    const isApproved = !!profile;
     console.log('Email pre-approval check result:', isApproved);
 
     return { data: isApproved, error: null };
   } catch (error) {
     console.error('Unexpected error checking email approval:', error);
-    return { data: false, error };
+
+    // Last resort fallback - try a direct SQL query via RPC
+    try {
+      console.log('Trying fallback RPC method...');
+      const { data: isApproved, error: rpcError } = await supabase
+        .rpc('check_email_pre_approved', { check_email: email.toLowerCase() });
+
+      if (rpcError) {
+        console.error('Error in RPC fallback:', rpcError);
+        return { data: false, error: rpcError };
+      }
+
+      console.log('Email pre-approval check result (RPC fallback):', isApproved);
+      return { data: !!isApproved, error: null };
+    } catch (fallbackError) {
+      console.error('Fallback method also failed:', fallbackError);
+      return { data: false, error };
+    }
   }
 };
 
