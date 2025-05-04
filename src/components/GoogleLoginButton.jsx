@@ -88,7 +88,7 @@ const GoogleLoginButton = () => {
           <strong>Local Development Environment Detected</strong>
           <p className="mt-2 mb-0">
             You're running the app on localhost. After Google authentication, you'll be redirected to the production URL
-            (https://kaienv.vercel.app) instead of localhost to ensure proper authentication flow.
+            (https://v0-kaienv.vercel.app) instead of localhost to ensure proper authentication flow.
           </p>
         </Alert>
       )}

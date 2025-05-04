@@ -84,13 +84,13 @@ export const signInWithGoogle = async () => {
       console.error('Error getting production origin:', error);
 
       // Fallback to hardcoded production URL
-      redirectUrl = 'https://kaienv.vercel.app/dashboard';
+      redirectUrl = 'https://v0-kaienv.vercel.app/dashboard';
       console.log('Using hardcoded production URL:', redirectUrl);
     }
   } else {
     // For local development, use the Vercel preview URL or production URL
     // This ensures we don't redirect back to localhost after authentication
-    redirectUrl = 'https://kaienv.vercel.app/dashboard';
+    redirectUrl = 'https://v0-kaienv.vercel.app/dashboard';
     console.log('Development environment detected. Using production redirect URL:', redirectUrl);
   }
 
