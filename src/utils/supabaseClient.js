@@ -4,35 +4,32 @@ import { createClient } from '@supabase/supabase-js';
 let supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 let supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Check if the anon key contains the literal template string (which indicates a substitution failure)
-if (supabaseAnonKey && (supabaseAnonKey.includes('${') || supabaseAnonKey.includes('${'))) {
-  console.error('Anon key environment variable substitution failed. Using hardcoded fallback key.');
-  // Use a hardcoded fallback key (this should be a public anon key, not a secret)
-  supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlkeGVuc3lwZnp5YW9pc3hoZXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTU2MzA0MDAsImV4cCI6MjAzMTIwNjQwMH0.Wd9JKu-JW3AXW-m-9-mJQENAzDVANnCHZsKUlO0Zn-o';
-}
+// Use consistent credentials for Supabase
+// The anon key from .env file
+const envAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlkeGVuc3lwZnp5YW9pc3hoZXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMDYxNjYsImV4cCI6MjA2MTY4MjE2Nn0.NSwoS3sZ43xPnkqC8vlB9lNAAKK7akC9WVDS1fto6Ps';
 
-// Check if the URL contains the literal template string (which indicates a substitution failure)
-if (supabaseUrl && (supabaseUrl.includes('${') || supabaseUrl.includes('${'))) {
-  console.error('Environment variable substitution failed. Using hardcoded fallback URL.');
-  // Use a hardcoded fallback URL for Supabase
-  supabaseUrl = 'https://idxensypfzyaoisxhezs.supabase.co';
+// If the environment variable is not available, use the hardcoded key
+if (!supabaseAnonKey || supabaseAnonKey.includes('${') || supabaseAnonKey === '') {
+  console.log('Using hardcoded anon key');
+  supabaseAnonKey = envAnonKey;
+} else {
+  console.log('Using environment variable anon key');
 }
 
 // Ensure the Supabase URL is valid
-if (supabaseUrl) {
+if (!supabaseUrl || supabaseUrl.includes('${') || supabaseUrl === '') {
+  console.log('Using hardcoded URL');
+  supabaseUrl = 'https://idxensypfzyaoisxhezs.supabase.co';
+} else {
   // Make sure the URL has a protocol
   if (!supabaseUrl.startsWith('http://') && !supabaseUrl.startsWith('https://')) {
     supabaseUrl = 'https://' + supabaseUrl;
   }
-
-  // Log the URL for debugging
-  console.log('Using Supabase URL:', supabaseUrl);
-} else {
-  // Fallback to a default URL if none is provided
-  console.error('No Supabase URL provided in environment variables');
-  // Use a hardcoded fallback URL for Supabase
-  supabaseUrl = 'https://idxensypfzyaoisxhezs.supabase.co';
+  console.log('Using environment variable URL');
 }
+
+// Log the URL for debugging
+console.log('Supabase URL:', supabaseUrl);
 
 // Create options with better error handling
 const options = {
@@ -60,18 +57,51 @@ export const signIn = async (email, password) => {
 };
 
 export const signInWithGoogle = async () => {
-  // Use a direct approach with minimal code to avoid errors
-  console.log('Starting Google authentication...');
+  // Get the current hostname to determine the redirect URL
+  const hostname = window.location.hostname;
+  const protocol = window.location.protocol;
+  const port = window.location.port ? `:${window.location.port}` : '';
+
+  // Determine the appropriate redirect URL
+  let redirectUrl;
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    // For local development, use the production URL
+    redirectUrl = 'https://v0-kaienv.vercel.app/dashboard';
+    console.log('Local development detected, using production redirect URL:', redirectUrl);
+  } else {
+    // For production, use the current origin
+    redirectUrl = `${protocol}//${hostname}${port}/dashboard`;
+    console.log('Production environment detected, using current origin for redirect:', redirectUrl);
+  }
+
+  console.log('Starting Google authentication with redirect URL:', redirectUrl);
+  console.log('Make sure this exact URL is configured in Supabase Google OAuth settings');
 
   try {
-    // Direct OAuth call without any session manipulation
-    return await supabase.auth.signInWithOAuth({
+    // Direct OAuth call with detailed logging
+    const result = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: 'https://v0-kaienv.vercel.app/dashboard',
-        scopes: 'email profile'
+        redirectTo: redirectUrl,
+        scopes: 'email profile',
+        queryParams: {
+          // Force Google to show the account selection screen
+          prompt: 'select_account',
+          // Specify the hosted domain to restrict to kaizens.co.uk emails
+          hd: 'kaizens.co.uk'
+        }
       }
     });
+
+    console.log('Google OAuth initialization result:', result);
+
+    if (result.error) {
+      console.error('Error initializing Google OAuth:', result.error);
+    } else if (result.data?.url) {
+      console.log('Redirecting to Google OAuth URL:', result.data.url);
+    }
+
+    return result;
   } catch (error) {
     console.error('Error in Google authentication:', error);
     return { error };
