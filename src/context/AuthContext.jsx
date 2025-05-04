@@ -35,6 +35,9 @@ export const AuthProvider = ({ children }) => {
 
             // Set the session with the stored tokens
             if (parsedTokens.access_token) {
+              // Import supabase client directly to avoid reference errors
+              const { supabase } = await import('../utils/supabaseClient');
+
               const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
                 access_token: parsedTokens.access_token,
                 refresh_token: parsedTokens.refresh_token || null
