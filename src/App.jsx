@@ -122,10 +122,55 @@ const DashboardContainer = () => {
           if (serviceTypeError.message === 'Invalid API key') {
             // Create some sample service types for demo purposes
             const sampleServiceTypes = [
-              { id: 'st-1', name: 'Web Server', icon: 'globe', description: 'HTTP/HTTPS web server' },
-              { id: 'st-2', name: 'Database', icon: 'database', description: 'Database server' },
-              { id: 'st-3', name: 'API Server', icon: 'code', description: 'REST API server' },
-              { id: 'st-4', name: 'File Server', icon: 'folder', description: 'File storage server' }
+              {
+                id: 'st-1',
+                name: 'Web Server',
+                icon: 'globe',
+                description: 'HTTP/HTTPS web server',
+                property_fields: [
+                  { name: 'port', label: 'Port', type: 'text' },
+                  { name: 'status', label: 'Status', type: 'text' },
+                  { name: 'domain', label: 'Domain Name', type: 'text' },
+                  { name: 'ssl', label: 'SSL Enabled', type: 'text' }
+                ]
+              },
+              {
+                id: 'st-2',
+                name: 'Database',
+                icon: 'database',
+                description: 'Database server',
+                property_fields: [
+                  { name: 'port', label: 'Port', type: 'text' },
+                  { name: 'status', label: 'Status', type: 'text' },
+                  { name: 'db_name', label: 'Database Name', type: 'text' },
+                  { name: 'username', label: 'Username', type: 'text' },
+                  { name: 'password', label: 'Password', type: 'password' }
+                ]
+              },
+              {
+                id: 'st-3',
+                name: 'API Server',
+                icon: 'code',
+                description: 'REST API server',
+                property_fields: [
+                  { name: 'port', label: 'Port', type: 'text' },
+                  { name: 'status', label: 'Status', type: 'text' },
+                  { name: 'endpoints', label: 'Endpoints', type: 'array' },
+                  { name: 'auth_type', label: 'Authentication Type', type: 'text' }
+                ]
+              },
+              {
+                id: 'st-4',
+                name: 'File Server',
+                icon: 'folder',
+                description: 'File storage server',
+                property_fields: [
+                  { name: 'port', label: 'Port', type: 'text' },
+                  { name: 'status', label: 'Status', type: 'text' },
+                  { name: 'path', label: 'Storage Path', type: 'text' },
+                  { name: 'quota', label: 'Storage Quota (GB)', type: 'text' }
+                ]
+              }
             ];
 
             setServiceTypes(sampleServiceTypes);
@@ -170,10 +215,55 @@ const DashboardContainer = () => {
         ];
 
         const sampleServiceTypes = [
-          { id: 'st-1', name: 'Web Server', icon: 'globe', description: 'HTTP/HTTPS web server' },
-          { id: 'st-2', name: 'Database', icon: 'database', description: 'Database server' },
-          { id: 'st-3', name: 'API Server', icon: 'code', description: 'REST API server' },
-          { id: 'st-4', name: 'File Server', icon: 'folder', description: 'File storage server' }
+          {
+            id: 'st-1',
+            name: 'Web Server',
+            icon: 'globe',
+            description: 'HTTP/HTTPS web server',
+            property_fields: [
+              { name: 'port', label: 'Port', type: 'text' },
+              { name: 'status', label: 'Status', type: 'text' },
+              { name: 'domain', label: 'Domain Name', type: 'text' },
+              { name: 'ssl', label: 'SSL Enabled', type: 'text' }
+            ]
+          },
+          {
+            id: 'st-2',
+            name: 'Database',
+            icon: 'database',
+            description: 'Database server',
+            property_fields: [
+              { name: 'port', label: 'Port', type: 'text' },
+              { name: 'status', label: 'Status', type: 'text' },
+              { name: 'db_name', label: 'Database Name', type: 'text' },
+              { name: 'username', label: 'Username', type: 'text' },
+              { name: 'password', label: 'Password', type: 'password' }
+            ]
+          },
+          {
+            id: 'st-3',
+            name: 'API Server',
+            icon: 'code',
+            description: 'REST API server',
+            property_fields: [
+              { name: 'port', label: 'Port', type: 'text' },
+              { name: 'status', label: 'Status', type: 'text' },
+              { name: 'endpoints', label: 'Endpoints', type: 'array' },
+              { name: 'auth_type', label: 'Authentication Type', type: 'text' }
+            ]
+          },
+          {
+            id: 'st-4',
+            name: 'File Server',
+            icon: 'folder',
+            description: 'File storage server',
+            property_fields: [
+              { name: 'port', label: 'Port', type: 'text' },
+              { name: 'status', label: 'Status', type: 'text' },
+              { name: 'path', label: 'Storage Path', type: 'text' },
+              { name: 'quota', label: 'Storage Quota (GB)', type: 'text' }
+            ]
+          }
         ];
 
         setVms(sampleVMs);
