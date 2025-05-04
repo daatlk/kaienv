@@ -298,8 +298,36 @@ export const AuthProvider = ({ children }) => {
 // Protected route component
 export const ProtectedRoute = ({ children }) => {
   const { currentUser, loading } = useAuth();
+  const [localLoading, setLocalLoading] = useState(true);
+  const [localUser, setLocalUser] = useState(null);
 
-  if (loading) {
+  // Check for user in localStorage on component mount
+  useEffect(() => {
+    console.log("ProtectedRoute: Checking authentication state");
+    console.log("ProtectedRoute: Current user from context:", currentUser);
+
+    // Try to get user from localStorage if not in context
+    if (!currentUser) {
+      try {
+        const storedUser = localStorage.getItem('currentUser');
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          console.log("ProtectedRoute: Found user in localStorage:", parsedUser);
+          setLocalUser(parsedUser);
+        } else {
+          console.log("ProtectedRoute: No user found in localStorage");
+        }
+      } catch (e) {
+        console.error("ProtectedRoute: Error parsing stored user:", e);
+      }
+    }
+
+    setLocalLoading(false);
+  }, [currentUser]);
+
+  // Show loading spinner while checking auth state
+  if (loading || localLoading) {
+    console.log("ProtectedRoute: Still loading...");
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
         <div className="text-center">
@@ -312,19 +340,68 @@ export const ProtectedRoute = ({ children }) => {
     );
   }
 
-  if (!currentUser) {
+  // Check if we have a user either from context or localStorage
+  const effectiveUser = currentUser || localUser;
+
+  if (!effectiveUser) {
+    console.log("ProtectedRoute: No authenticated user found, redirecting to login");
+
+    // Check if we're on an authentication callback URL
+    if (window.location.hash && window.location.hash.includes('access_token')) {
+      console.log("ProtectedRoute: Detected authentication callback, not redirecting");
+      return (
+        <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+          <div className="text-center">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+            <p className="mt-3">Processing authentication...</p>
+          </div>
+        </div>
+      );
+    }
+
     // Use React Router's Navigate component instead of direct window.location
     return <Navigate to="/login" />;
   }
 
+  console.log("ProtectedRoute: User authenticated, rendering children");
   return children;
 };
 
 // Admin route component
 export const AdminRoute = ({ children }) => {
   const { currentUser, isAdmin, loading } = useAuth();
+  const [localLoading, setLocalLoading] = useState(true);
+  const [localUser, setLocalUser] = useState(null);
 
-  if (loading) {
+  // Check for user in localStorage on component mount
+  useEffect(() => {
+    console.log("AdminRoute: Checking authentication state");
+    console.log("AdminRoute: Current user from context:", currentUser);
+
+    // Try to get user from localStorage if not in context
+    if (!currentUser) {
+      try {
+        const storedUser = localStorage.getItem('currentUser');
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          console.log("AdminRoute: Found user in localStorage:", parsedUser);
+          setLocalUser(parsedUser);
+        } else {
+          console.log("AdminRoute: No user found in localStorage");
+        }
+      } catch (e) {
+        console.error("AdminRoute: Error parsing stored user:", e);
+      }
+    }
+
+    setLocalLoading(false);
+  }, [currentUser]);
+
+  // Show loading spinner while checking auth state
+  if (loading || localLoading) {
+    console.log("AdminRoute: Still loading...");
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
         <div className="text-center">
@@ -337,15 +414,39 @@ export const AdminRoute = ({ children }) => {
     );
   }
 
-  if (!currentUser) {
+  // Check if we have a user either from context or localStorage
+  const effectiveUser = currentUser || localUser;
+
+  if (!effectiveUser) {
+    console.log("AdminRoute: No authenticated user found, redirecting to login");
+
+    // Check if we're on an authentication callback URL
+    if (window.location.hash && window.location.hash.includes('access_token')) {
+      console.log("AdminRoute: Detected authentication callback, not redirecting");
+      return (
+        <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+          <div className="text-center">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+            <p className="mt-3">Processing authentication...</p>
+          </div>
+        </div>
+      );
+    }
+
     // Use React Router's Navigate component instead of direct window.location
     return <Navigate to="/login" />;
   }
 
-  if (!isAdmin()) {
-    // Use React Router's Navigate component instead of direct window.location
+  // Check if the user is an admin
+  const isUserAdmin = effectiveUser.role === 'admin';
+
+  if (!isUserAdmin) {
+    console.log("AdminRoute: User is not an admin, redirecting to dashboard");
     return <Navigate to="/dashboard" />;
   }
 
+  console.log("AdminRoute: User authenticated as admin, rendering children");
   return children;
 };

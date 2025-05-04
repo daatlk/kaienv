@@ -29,10 +29,40 @@ const Login = () => {
     console.log('host:', window.location.host);
   }, []);
 
-  // If user is already logged in, redirect to dashboard
-  if (currentUser) {
-    return <Navigate to="/dashboard" />;
-  }
+  // Check for user in localStorage or context
+  useEffect(() => {
+    console.log("Login: Checking for existing authentication");
+
+    // Check if we're on an authentication callback URL
+    if (window.location.hash && window.location.hash.includes('access_token')) {
+      console.log("Login: Detected authentication callback, not redirecting");
+      return;
+    }
+
+    // Check if we have a user in context
+    if (currentUser) {
+      console.log("Login: User already authenticated in context, redirecting to dashboard");
+      window.location.href = '/dashboard';
+      return;
+    }
+
+    // Check if we have a user in localStorage
+    try {
+      const storedUser = localStorage.getItem('currentUser');
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        console.log("Login: Found user in localStorage:", parsedUser);
+        console.log("Login: Redirecting to dashboard");
+        window.location.href = '/dashboard';
+        return;
+      }
+    } catch (e) {
+      console.error("Login: Error parsing stored user:", e);
+      localStorage.removeItem('currentUser');
+    }
+
+    console.log("Login: No authenticated user found, showing login form");
+  }, [currentUser]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
