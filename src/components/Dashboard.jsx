@@ -18,7 +18,9 @@ import {
   faObjectGroup,
   faFilter,
   faExchangeAlt,
-  faInfoCircle
+  faInfoCircle,
+  faPencilAlt,
+  faEye
 } from '@fortawesome/free-solid-svg-icons';
 import OSBadge from './OSBadge';
 import ServiceBadge from './ServiceBadge';
@@ -49,6 +51,7 @@ const Dashboard = ({
   const [successMessage, setSuccessMessage] = useState(null);
   const [selectedVMs, setSelectedVMs] = useState([]);
   const [filterGroupId, setFilterGroupId] = useState('all'); // 'all' or a group ID
+  const [editMode, setEditMode] = useState(false); // Toggle for edit mode
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
 
@@ -279,7 +282,7 @@ const Dashboard = ({
         >
           <Card.Header className="d-flex justify-content-between align-items-center">
             <div className="d-flex align-items-center">
-              {isAdmin() && (
+              {isAdmin() && editMode && (
                 <Form.Check
                   type="checkbox"
                   className="me-2"
@@ -303,6 +306,7 @@ const Dashboard = ({
             </div>
             <div>
               <div className="d-flex">
+                {/* Always show details button */}
                 <Button
                   variant="link"
                   className="p-1 me-1"
@@ -312,7 +316,8 @@ const Dashboard = ({
                   <FontAwesomeIcon icon={faInfoCircle} className="text-info" />
                 </Button>
 
-                {isAdmin() && (
+                {/* Only show edit/delete buttons for admins in edit mode */}
+                {isAdmin() && editMode && (
                   <>
                     <Button
                       variant="link"
@@ -426,6 +431,20 @@ const Dashboard = ({
         <Col xs="auto">
           {isAdmin() && (
             <div className="d-flex">
+              {/* Edit Mode Toggle Button */}
+              <Button
+                variant={editMode ? "outline-secondary" : "outline-primary"}
+                onClick={() => setEditMode(!editMode)}
+                className="me-2"
+                title={editMode ? "Exit Edit Mode" : "Enter Edit Mode"}
+              >
+                <FontAwesomeIcon
+                  icon={editMode ? faEye : faPencilAlt}
+                  className="me-2"
+                />
+                {editMode ? "View Mode" : "Edit Mode"}
+              </Button>
+
               <Button
                 variant="outline-primary"
                 onClick={handleAddGroup}
@@ -505,7 +524,7 @@ const Dashboard = ({
           </Form.Group>
         </Col>
         <Col md={6} className="d-flex justify-content-end align-items-center">
-          {selectedVMs.length > 0 && (
+          {isAdmin() && editMode && selectedVMs.length > 0 && (
             <div className="d-flex align-items-center">
               <Badge bg="primary" className="me-2">
                 {selectedVMs.length} VM{selectedVMs.length !== 1 ? 's' : ''} selected
@@ -592,7 +611,7 @@ const Dashboard = ({
                             </small>
                           )}
                         </div>
-                        {isAdmin() && (
+                        {isAdmin() && editMode && (
                           <div className="d-flex" onClick={e => e.stopPropagation()}>
                             <Button
                               variant="link"
