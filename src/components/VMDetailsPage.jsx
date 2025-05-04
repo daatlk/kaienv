@@ -9,22 +9,23 @@ import {
   faUser,
   faKey,
   faEdit,
-  faLayerGroup,
-  faDesktop
+  faDesktop,
+  faCopy,
+  faCheck
 } from '@fortawesome/free-solid-svg-icons';
 import OSBadge from './OSBadge';
 import ServiceBadge from './ServiceBadge';
 import Header from './Header';
-import { getVMById, getVMGroups } from '../utils/supabaseClient';
+import { getVMById } from '../utils/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 
 const VMDetailsPage = () => {
   const { vmId } = useParams();
   const navigate = useNavigate();
   const [vm, setVM] = useState(null);
-  const [vmGroup, setVMGroup] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [copiedField, setCopiedField] = useState(null);
   const { isAdmin } = useAuth();
 
   useEffect(() => {
@@ -35,7 +36,7 @@ const VMDetailsPage = () => {
       try {
         // Load VM details
         const { data: vmData, error: vmError } = await getVMById(vmId);
-        
+
         if (vmError) {
           console.error('Error loading VM details:', vmError);
           setError('Failed to load VM details. Please try again later.');
@@ -48,13 +49,6 @@ const VMDetailsPage = () => {
         }
 
         setVM(vmData);
-
-        // If VM belongs to a group, load group details
-        if (vmData.group_id) {
-          const { data: groupsData } = await getVMGroups();
-          const group = groupsData?.find(g => g.id === vmData.group_id);
-          setVMGroup(group);
-        }
       } catch (error) {
         console.error('Error loading data:', error);
         setError('An unexpected error occurred. Please try again later.');
@@ -80,6 +74,16 @@ const VMDetailsPage = () => {
 
   const handleServiceClick = (serviceId) => {
     navigate(`/service/${vmId}/${serviceId}`);
+  };
+
+  const handleCopy = (value, fieldName) => {
+    navigator.clipboard.writeText(value);
+    setCopiedField(fieldName);
+
+    // Reset copied field after 2 seconds
+    setTimeout(() => {
+      setCopiedField(null);
+    }, 2000);
   };
 
   if (loading) {
@@ -146,7 +150,7 @@ const VMDetailsPage = () => {
         </div>
 
         <Row>
-          <Col lg={8}>
+          <Col>
             <Card className="mb-4">
               <Card.Header className="bg-primary text-white">
                 <div className="d-flex align-items-center">
@@ -158,54 +162,143 @@ const VMDetailsPage = () => {
                 <Row>
                   <Col md={6}>
                     <ListGroup variant="flush">
-                      <ListGroup.Item>
-                        <strong>Hostname:</strong> {vm.hostname}
-                      </ListGroup.Item>
-                      <ListGroup.Item>
-                        <strong>IP Address:</strong> {vm.ip_address}
-                      </ListGroup.Item>
-                      <ListGroup.Item>
-                        <strong>Admin User:</strong> {vm.admin_user}
-                      </ListGroup.Item>
-                      <ListGroup.Item>
-                        <strong>Admin Password:</strong> ••••••••
-                        <Button 
-                          variant="link" 
+                      <ListGroup.Item className="d-flex justify-content-between align-items-center">
+                        <div>
+                          <strong>Hostname:</strong> {vm.hostname}
+                        </div>
+                        <Button
+                          variant="link"
                           size="sm"
-                          onClick={() => navigator.clipboard.writeText(vm.admin_password)}
+                          className="p-0 ms-2"
+                          onClick={() => handleCopy(vm.hostname, 'hostname')}
+                          title="Copy hostname"
+                        >
+                          {copiedField === 'hostname' ? (
+                            <FontAwesomeIcon icon={faCheck} className="text-success" />
+                          ) : (
+                            <FontAwesomeIcon icon={faCopy} />
+                          )}
+                        </Button>
+                      </ListGroup.Item>
+                      <ListGroup.Item className="d-flex justify-content-between align-items-center">
+                        <div>
+                          <strong>IP Address:</strong> {vm.ip_address}
+                        </div>
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="p-0 ms-2"
+                          onClick={() => handleCopy(vm.ip_address, 'ip')}
+                          title="Copy IP address"
+                        >
+                          {copiedField === 'ip' ? (
+                            <FontAwesomeIcon icon={faCheck} className="text-success" />
+                          ) : (
+                            <FontAwesomeIcon icon={faCopy} />
+                          )}
+                        </Button>
+                      </ListGroup.Item>
+                      <ListGroup.Item className="d-flex justify-content-between align-items-center">
+                        <div>
+                          <strong>Admin User:</strong> {vm.admin_user}
+                        </div>
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="p-0 ms-2"
+                          onClick={() => handleCopy(vm.admin_user, 'user')}
+                          title="Copy username"
+                        >
+                          {copiedField === 'user' ? (
+                            <FontAwesomeIcon icon={faCheck} className="text-success" />
+                          ) : (
+                            <FontAwesomeIcon icon={faCopy} />
+                          )}
+                        </Button>
+                      </ListGroup.Item>
+                      <ListGroup.Item className="d-flex justify-content-between align-items-center">
+                        <div>
+                          <strong>Admin Password:</strong> ••••••••
+                        </div>
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="p-0 ms-2"
+                          onClick={() => handleCopy(vm.admin_password, 'password')}
                           title="Copy password"
                         >
-                          Copy
+                          {copiedField === 'password' ? (
+                            <FontAwesomeIcon icon={faCheck} className="text-success" />
+                          ) : (
+                            <FontAwesomeIcon icon={faCopy} />
+                          )}
                         </Button>
                       </ListGroup.Item>
                     </ListGroup>
                   </Col>
                   <Col md={6}>
                     <ListGroup variant="flush">
-                      <ListGroup.Item>
-                        <strong>Operating System:</strong> {vm.os}
-                        <span className="ms-2">
-                          <OSBadge os={vm.os} osVersion={vm.os_version} />
-                        </span>
+                      <ListGroup.Item className="d-flex justify-content-between align-items-center">
+                        <div>
+                          <strong>Operating System:</strong> {vm.os}
+                          <span className="ms-2">
+                            <OSBadge os={vm.os} osVersion={vm.os_version} />
+                          </span>
+                        </div>
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="p-0 ms-2"
+                          onClick={() => handleCopy(vm.os, 'os')}
+                          title="Copy OS name"
+                        >
+                          {copiedField === 'os' ? (
+                            <FontAwesomeIcon icon={faCheck} className="text-success" />
+                          ) : (
+                            <FontAwesomeIcon icon={faCopy} />
+                          )}
+                        </Button>
                       </ListGroup.Item>
-                      <ListGroup.Item>
-                        <strong>OS Version:</strong> {vm.os_version || 'Not specified'}
+                      <ListGroup.Item className="d-flex justify-content-between align-items-center">
+                        <div>
+                          <strong>OS Version:</strong> {vm.os_version || 'Not specified'}
+                        </div>
+                        {vm.os_version && (
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="p-0 ms-2"
+                            onClick={() => handleCopy(vm.os_version, 'osVersion')}
+                            title="Copy OS version"
+                          >
+                            {copiedField === 'osVersion' ? (
+                              <FontAwesomeIcon icon={faCheck} className="text-success" />
+                            ) : (
+                              <FontAwesomeIcon icon={faCopy} />
+                            )}
+                          </Button>
+                        )}
                       </ListGroup.Item>
-                      <ListGroup.Item>
-                        <strong>Group:</strong> {
-                          vmGroup ? (
-                            <Badge 
-                              pill 
-                              style={{ backgroundColor: vmGroup.color || 'var(--bs-secondary)' }}
-                            >
-                              {vmGroup.name}
-                            </Badge>
-                          ) : 'None'
-                        }
-                      </ListGroup.Item>
-                      <ListGroup.Item>
-                        <strong>Created:</strong> {new Date(vm.created_at).toLocaleString()}
-                      </ListGroup.Item>
+                      {vm.name && (
+                        <ListGroup.Item className="d-flex justify-content-between align-items-center">
+                          <div>
+                            <strong>VM Name:</strong> {vm.name}
+                          </div>
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="p-0 ms-2"
+                            onClick={() => handleCopy(vm.name, 'name')}
+                            title="Copy VM name"
+                          >
+                            {copiedField === 'name' ? (
+                              <FontAwesomeIcon icon={faCheck} className="text-success" />
+                            ) : (
+                              <FontAwesomeIcon icon={faCopy} />
+                            )}
+                          </Button>
+                        </ListGroup.Item>
+                      )}
                     </ListGroup>
                   </Col>
                 </Row>
@@ -222,8 +315,8 @@ const VMDetailsPage = () => {
                   <Row>
                     {vm.services.map(service => (
                       <Col key={service.id} md={4} className="mb-3">
-                        <Card 
-                          className="h-100 service-card" 
+                        <Card
+                          className="h-100 service-card"
                           onClick={() => handleServiceClick(service.id)}
                           style={{ cursor: 'pointer' }}
                         >
@@ -243,47 +336,6 @@ const VMDetailsPage = () => {
                 )}
               </Card.Body>
             </Card>
-          </Col>
-
-          <Col lg={4}>
-            <Card className="mb-4">
-              <Card.Header className="bg-secondary text-white">
-                <FontAwesomeIcon icon={faNetworkWired} className="me-2" />
-                Quick Actions
-              </Card.Header>
-              <ListGroup variant="flush">
-                <ListGroup.Item action onClick={() => navigator.clipboard.writeText(vm.ip_address)}>
-                  <FontAwesomeIcon icon={faNetworkWired} className="me-2 text-info" />
-                  Copy IP Address
-                </ListGroup.Item>
-                <ListGroup.Item action onClick={() => navigator.clipboard.writeText(vm.admin_user)}>
-                  <FontAwesomeIcon icon={faUser} className="me-2 text-warning" />
-                  Copy Username
-                </ListGroup.Item>
-                <ListGroup.Item action onClick={() => navigator.clipboard.writeText(vm.admin_password)}>
-                  <FontAwesomeIcon icon={faKey} className="me-2 text-danger" />
-                  Copy Password
-                </ListGroup.Item>
-              </ListGroup>
-            </Card>
-
-            {vmGroup && (
-              <Card>
-                <Card.Header 
-                  className="text-white"
-                  style={{ backgroundColor: vmGroup.color || 'var(--bs-secondary)' }}
-                >
-                  <FontAwesomeIcon icon={faLayerGroup} className="me-2" />
-                  Group Details
-                </Card.Header>
-                <Card.Body>
-                  <h5>{vmGroup.name}</h5>
-                  {vmGroup.description && (
-                    <p className="text-muted">{vmGroup.description}</p>
-                  )}
-                </Card.Body>
-              </Card>
-            )}
           </Col>
         </Row>
       </Container>
