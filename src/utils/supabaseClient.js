@@ -83,19 +83,8 @@ export const signInWithGoogle = async () => {
   localStorage.setItem('auth_redirect_url', redirectUrl);
 
   try {
-    // Configure Supabase auth to use the production URL for site URL
-    // This is a more direct way to control the redirect behavior
-    const { error: configError } = await supabase.auth.setSession({
-      access_token: null,
-      refresh_token: null
-    });
-
-    if (configError) {
-      console.error('Error configuring auth session:', configError);
-      return { error: configError };
-    }
-
-    // Get the current session to check if we're already authenticated
+    // Skip trying to set a null session as it causes AuthSessionMissingError
+    // Instead, just get the current session to check if we're already authenticated
     const { data: sessionData } = await supabase.auth.getSession();
     console.log('Current session before Google auth:', sessionData);
 

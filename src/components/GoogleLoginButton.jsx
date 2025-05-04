@@ -3,7 +3,7 @@ import { Button, Spinner, Alert } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import { faGoogle } from '@fortawesome/free-brands-svg-icons';
-import { signInWithGoogle } from '../utils/supabaseClient';
+import { signInWithGoogle, supabase } from '../utils/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 
 const GoogleLoginButton = () => {
@@ -37,8 +37,43 @@ const GoogleLoginButton = () => {
 
       if (result.error) {
         console.error('Supabase Google auth error:', result.error);
-        setError(`Google authentication error: ${result.error.message}`);
-        setShowManualLogin(true);
+
+        // Check if it's an AuthSessionMissingError, which we can ignore
+        if (result.error.message && result.error.message.includes('Auth session missing')) {
+          console.log('Ignoring AuthSessionMissingError and continuing with OAuth flow');
+
+          // Try again without trying to set the session first
+          console.log('Retrying OAuth flow directly...');
+          const retryResult = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+              redirectTo: 'https://v0-kaienv.vercel.app/dashboard',
+              scopes: 'email profile',
+              queryParams: {
+                prompt: 'select_account'
+              }
+            }
+          });
+
+          console.log('Retry OAuth result:', retryResult);
+
+          if (retryResult.error) {
+            console.error('Retry also failed:', retryResult.error);
+            setError(`Google authentication error: ${retryResult.error.message}`);
+            setShowManualLogin(true);
+          } else if (retryResult.data?.url) {
+            console.log('Redirecting to:', retryResult.data.url);
+            window.location.href = retryResult.data.url;
+            return;
+          } else {
+            console.log('Retry succeeded but no URL provided');
+            console.log('Auth data:', retryResult.data);
+          }
+        } else {
+          // For other errors, show the error message
+          setError(`Google authentication error: ${result.error.message}`);
+          setShowManualLogin(true);
+        }
       } else {
         console.log('Google authentication initiated successfully');
         console.log('Auth data:', result.data);
