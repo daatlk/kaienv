@@ -67,8 +67,8 @@ const createDefaultAdminIfNeeded = async () => {
 
     console.log('No users found, creating default admin user...');
 
-    // Create default admin user
-    const defaultEmail = 'admin@example.com';
+    // Create default admin user with a valid email domain
+    const defaultEmail = 'admin@gmail.com'; // Using gmail.com which is typically allowed
     const defaultPassword = 'admin123';
 
     // First, create the auth user

@@ -112,7 +112,8 @@ export const handleAuthCallback = () => {
                 // Special case for testing - bypass check for specific emails
                 const bypassEmails = [
                   'wickramasinghenadeera00@gmail.com',
-                  'admin@example.com'
+                  'admin@gmail.com',
+                  'admin@example.com' // Keep the old one for backward compatibility
                 ];
 
                 if (bypassEmails.includes(email.toLowerCase())) {
@@ -175,7 +176,8 @@ export const handleAuthCallback = () => {
             // Special case for testing - bypass check for specific emails
             const bypassEmails = [
               'wickramasinghenadeera00@gmail.com',
-              'admin@example.com'
+              'admin@gmail.com',
+              'admin@example.com' // Keep the old one for backward compatibility
             ];
 
             if (bypassEmails.includes(email.toLowerCase())) {

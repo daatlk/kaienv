@@ -181,7 +181,7 @@ const Login = () => {
 
           <div className="mt-3 text-center">
             <p className="text-muted small">
-              First time? Use admin@example.com / admin123 to log in, then change the password.
+              First time? Use admin@gmail.com / admin123 to log in, then change the password.
             </p>
           </div>
 
