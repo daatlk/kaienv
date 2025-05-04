@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Spinner, Alert } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import { faGoogle } from '@fortawesome/free-brands-svg-icons';
 import { signInWithGoogle } from '../utils/supabaseClient';
 import { useAuth } from '../context/AuthContext';
@@ -9,7 +10,14 @@ const GoogleLoginButton = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showManualLogin, setShowManualLogin] = useState(false);
+  const [isLocalhost, setIsLocalhost] = useState(false);
   const { login } = useAuth();
+
+  // Check if we're running on localhost
+  useEffect(() => {
+    const hostname = window.location.hostname;
+    setIsLocalhost(hostname === 'localhost' || hostname === '127.0.0.1');
+  }, []);
 
   const handleGoogleLogin = async () => {
     try {
@@ -71,6 +79,17 @@ const GoogleLoginButton = () => {
       {error && (
         <Alert variant="danger" className="mb-3">
           {error}
+        </Alert>
+      )}
+
+      {isLocalhost && (
+        <Alert variant="info" className="mb-3">
+          <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
+          <strong>Local Development Environment Detected</strong>
+          <p className="mt-2 mb-0">
+            You're running the app on localhost. After Google authentication, you'll be redirected to the production URL
+            (https://kaienv.vercel.app) instead of localhost to ensure proper authentication flow.
+          </p>
         </Alert>
       )}
 

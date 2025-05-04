@@ -62,35 +62,36 @@ export const signIn = async (email, password) => {
 export const signInWithGoogle = async () => {
   // Get the current origin safely
   let redirectUrl;
-  try {
-    // Try to get the current origin
-    redirectUrl = `${window.location.origin}/dashboard`;
 
-    // Check if the origin is valid (not undefined or null)
-    if (!redirectUrl || redirectUrl === 'null/dashboard' || redirectUrl === 'undefined/dashboard') {
-      throw new Error('Invalid window.location.origin');
-    }
+  // Check if we're in a production environment
+  const isProduction =
+    window.location.hostname !== 'localhost' &&
+    window.location.hostname !== '127.0.0.1';
 
-    console.log('Using redirect URL:', redirectUrl);
-  } catch (error) {
-    // Fallback to a hardcoded URL if window.location.origin is not available
-    console.error('Error getting window.location.origin:', error);
-
-    // Use the current URL as a basis for the redirect
+  if (isProduction) {
+    // For production, use the deployed URL
     try {
-      const currentUrl = window.location.href;
-      const urlObj = new URL(currentUrl);
-      const baseUrl = `${urlObj.protocol}//${urlObj.host}`;
-      redirectUrl = `${baseUrl}/dashboard`;
-      console.log('Using URL object redirect:', redirectUrl);
-    } catch (urlError) {
-      console.error('Error creating URL object:', urlError);
+      // Try to get the current origin
+      redirectUrl = `${window.location.origin}/dashboard`;
 
-      // Final fallback to a hardcoded URL
-      const deployedUrl = 'https://kaienv.vercel.app';
-      redirectUrl = `${deployedUrl}/dashboard`;
-      console.log('Using hardcoded fallback redirect:', redirectUrl);
+      // Check if the origin is valid
+      if (!redirectUrl || redirectUrl === 'null/dashboard' || redirectUrl === 'undefined/dashboard') {
+        throw new Error('Invalid window.location.origin');
+      }
+
+      console.log('Using production redirect URL:', redirectUrl);
+    } catch (error) {
+      console.error('Error getting production origin:', error);
+
+      // Fallback to hardcoded production URL
+      redirectUrl = 'https://kaienv.vercel.app/dashboard';
+      console.log('Using hardcoded production URL:', redirectUrl);
     }
+  } else {
+    // For local development, use the Vercel preview URL or production URL
+    // This ensures we don't redirect back to localhost after authentication
+    redirectUrl = 'https://kaienv.vercel.app/dashboard';
+    console.log('Development environment detected. Using production redirect URL:', redirectUrl);
   }
 
   // Log the final redirect URL for debugging
