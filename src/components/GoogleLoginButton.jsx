@@ -57,32 +57,44 @@ const GoogleLoginButton = () => {
     }
   };
 
-  const handleManualGoogleLogin = async () => {
+  const handleManualGoogleLogin = () => {
     try {
       setError(null);
       setLoading(true);
 
-      // Create a more realistic user object
+      // Create a more realistic user object with admin role for demo
       const userInfo = {
         id: 'google-user-' + Math.random().toString(36).substring(2, 15),
-        email: 'user@gmail.com',
-        name: 'Google User',
+        email: 'demo@kaizens.co.uk',
+        name: 'Demo User',
         picture: 'https://lh3.googleusercontent.com/a/default-user',
-        role: 'user',
+        role: 'admin', // Set as admin for full access
         authProvider: 'google'
       };
+
+      console.log('Creating demo user:', userInfo);
+
+      // Clear any existing auth data
+      localStorage.removeItem('supabase.auth.token');
 
       // Store the user in localStorage
       localStorage.setItem('currentUser', JSON.stringify(userInfo));
 
-      console.log('Manual Google login successful, stored user:', userInfo);
+      console.log('Demo login successful, stored user in localStorage');
 
-      // Redirect to dashboard
-      window.location.href = '/dashboard';
+      // Set a flag to indicate demo mode
+      localStorage.setItem('demo_mode', 'true');
+
+      // Show success message
+      alert('Demo login successful! Redirecting to dashboard...');
+
+      // Redirect to dashboard with a slight delay to ensure localStorage is updated
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 500);
     } catch (error) {
-      console.error('Manual Google auth error:', error);
-      setError(`Manual Google login failed: ${error.message}`);
-    } finally {
+      console.error('Demo login error:', error);
+      setError(`Demo login failed: ${error.message}`);
       setLoading(false);
     }
   };

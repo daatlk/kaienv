@@ -79,8 +79,9 @@ const DashboardContainer = () => {
           }
 
           // Check if we're in demo mode (using the manual Google login)
+          const isDemoMode = localStorage.getItem('demo_mode') === 'true';
           const storedUser = localStorage.getItem('currentUser');
-          if (storedUser && JSON.parse(storedUser).authProvider === 'google') {
+          if (isDemoMode || (storedUser && JSON.parse(storedUser).authProvider === 'google')) {
             console.log('Demo mode detected, using sample VMs');
             // Create some sample VMs for demo purposes
             const sampleVMs = [
@@ -134,8 +135,9 @@ const DashboardContainer = () => {
           }
 
           // Check if we're in demo mode (using the manual Google login)
+          const isDemoMode = localStorage.getItem('demo_mode') === 'true';
           const storedUser = localStorage.getItem('currentUser');
-          if (storedUser && JSON.parse(storedUser).authProvider === 'google') {
+          if (isDemoMode || (storedUser && JSON.parse(storedUser).authProvider === 'google')) {
             console.log('Demo mode detected, using sample service types');
             // Create some sample service types for demo purposes
             const sampleServiceTypes = [
@@ -190,8 +192,9 @@ const DashboardContainer = () => {
         setError('An unexpected error occurred. Please try again later.');
 
         // Check if we're in demo mode (using the manual Google login)
+        const isDemoMode = localStorage.getItem('demo_mode') === 'true';
         const storedUser = localStorage.getItem('currentUser');
-        if (storedUser && JSON.parse(storedUser).authProvider === 'google') {
+        if (isDemoMode || (storedUser && JSON.parse(storedUser).authProvider === 'google')) {
           console.log('Demo mode detected in catch block, using sample data');
 
           // Create some sample VMs for demo purposes
