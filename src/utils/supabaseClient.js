@@ -60,69 +60,20 @@ export const signIn = async (email, password) => {
 };
 
 export const signInWithGoogle = async () => {
-  // Always use the production URL for the redirect
-  // This is the most reliable approach to ensure consistent authentication behavior
-  const redirectUrl = 'https://v0-kaienv.vercel.app/dashboard';
-
-  console.log('Using fixed production redirect URL:', redirectUrl);
-  console.log('Current Supabase URL:', supabaseUrl);
-  console.log('Current Supabase Anon Key:', supabaseAnonKey ? 'Key exists (not shown for security)' : 'No key found');
-  console.log('Current window location:', window.location.href);
-  console.log('Current window origin:', window.location.origin);
-
-  // Store debugging information in localStorage
-  localStorage.setItem('auth_debug_info', JSON.stringify({
-    timestamp: new Date().toISOString(),
-    supabaseUrl: supabaseUrl,
-    hasAnonKey: !!supabaseAnonKey,
-    currentUrl: window.location.href,
-    redirectUrl: redirectUrl
-  }));
-
-  // Store the redirect URL in localStorage so we can check it after authentication
-  localStorage.setItem('auth_redirect_url', redirectUrl);
+  // Use a direct approach with minimal code to avoid errors
+  console.log('Starting Google authentication...');
 
   try {
-    // Skip trying to set a null session as it causes AuthSessionMissingError
-    // Instead, just get the current session to check if we're already authenticated
-    const { data: sessionData } = await supabase.auth.getSession();
-    console.log('Current session before Google auth:', sessionData);
-
-    // Initiate the OAuth flow with Google
-    console.log('Initiating OAuth flow with Google...');
-    const result = await supabase.auth.signInWithOAuth({
+    // Direct OAuth call without any session manipulation
+    return await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: redirectUrl,
-        scopes: 'email profile',
-        queryParams: {
-          prompt: 'select_account' // Force Google to show the account selection screen
-        }
+        redirectTo: 'https://v0-kaienv.vercel.app/dashboard',
+        scopes: 'email profile'
       }
     });
-
-    console.log('OAuth flow result:', result);
-
-    // Store the result in localStorage for debugging
-    localStorage.setItem('auth_result', JSON.stringify({
-      timestamp: new Date().toISOString(),
-      hasError: !!result.error,
-      errorMessage: result.error ? result.error.message : null,
-      hasData: !!result.data,
-      dataKeys: result.data ? Object.keys(result.data) : []
-    }));
-
-    return result;
   } catch (error) {
-    console.error('Unexpected error in signInWithGoogle:', error);
-
-    // Store the error in localStorage for debugging
-    localStorage.setItem('auth_error', JSON.stringify({
-      timestamp: new Date().toISOString(),
-      message: error.message,
-      stack: error.stack
-    }));
-
+    console.error('Error in Google authentication:', error);
     return { error };
   }
 };

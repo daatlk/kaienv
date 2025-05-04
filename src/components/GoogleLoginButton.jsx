@@ -25,68 +25,31 @@ const GoogleLoginButton = () => {
       setLoading(true);
 
       console.log('Initiating Google login...');
-      console.log('Current URL:', window.location.href);
-      console.log('Redirect URL will be:', 'https://v0-kaienv.vercel.app/dashboard');
 
-      // Store the current timestamp for debugging
-      localStorage.setItem('google_auth_initiated', Date.now().toString());
+      // Use the simplest possible approach
+      const result = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: 'https://v0-kaienv.vercel.app/dashboard',
+          scopes: 'email profile'
+        }
+      });
 
-      // Try to use Supabase's signInWithGoogle function
-      const result = await signInWithGoogle();
       console.log('Google auth result:', result);
 
       if (result.error) {
-        console.error('Supabase Google auth error:', result.error);
-
-        // Check if it's an AuthSessionMissingError, which we can ignore
-        if (result.error.message && result.error.message.includes('Auth session missing')) {
-          console.log('Ignoring AuthSessionMissingError and continuing with OAuth flow');
-
-          // Try again without trying to set the session first
-          console.log('Retrying OAuth flow directly...');
-          const retryResult = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-              redirectTo: 'https://v0-kaienv.vercel.app/dashboard',
-              scopes: 'email profile',
-              queryParams: {
-                prompt: 'select_account'
-              }
-            }
-          });
-
-          console.log('Retry OAuth result:', retryResult);
-
-          if (retryResult.error) {
-            console.error('Retry also failed:', retryResult.error);
-            setError(`Google authentication error: ${retryResult.error.message}`);
-            setShowManualLogin(true);
-          } else if (retryResult.data?.url) {
-            console.log('Redirecting to:', retryResult.data.url);
-            window.location.href = retryResult.data.url;
-            return;
-          } else {
-            console.log('Retry succeeded but no URL provided');
-            console.log('Auth data:', retryResult.data);
-          }
-        } else {
-          // For other errors, show the error message
-          setError(`Google authentication error: ${result.error.message}`);
-          setShowManualLogin(true);
-        }
+        console.error('Google auth error:', result.error);
+        setError(`Google authentication error: ${result.error.message}`);
+        setShowManualLogin(true);
+      } else if (result.data?.url) {
+        console.log('Redirecting to:', result.data.url);
+        window.location.href = result.data.url;
+        return;
       } else {
-        console.log('Google authentication initiated successfully');
-        console.log('Auth data:', result.data);
-
-        // If we have a URL, redirect to it
-        if (result.data?.url) {
-          console.log('Redirecting to:', result.data.url);
-          window.location.href = result.data.url;
-          return;
-        }
+        console.log('Authentication initiated but no URL provided');
       }
     } catch (error) {
-      console.error('Google auth error:', error);
+      console.error('Unexpected error in Google login:', error);
       setError(`Failed to initiate Google login: ${error.message}`);
       setShowManualLogin(true);
     } finally {
