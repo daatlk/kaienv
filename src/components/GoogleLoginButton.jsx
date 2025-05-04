@@ -62,27 +62,26 @@ const GoogleLoginButton = () => {
       setError(null);
       setLoading(true);
 
-      // Simulate user info from Google
+      // Create a more realistic user object
       const userInfo = {
+        id: 'google-user-' + Math.random().toString(36).substring(2, 15),
         email: 'user@gmail.com',
         name: 'Google User',
-        picture: 'https://example.com/profile.jpg'
+        picture: 'https://lh3.googleusercontent.com/a/default-user',
+        role: 'user',
+        authProvider: 'google'
       };
 
-      // Log in the user with the simulated information
-      const success = await login(userInfo.email, null, 'google', {
-        name: userInfo.name,
-        picture: userInfo.picture
-      });
+      // Store the user in localStorage
+      localStorage.setItem('currentUser', JSON.stringify(userInfo));
 
-      if (!success) {
-        throw new Error('Simulated Google authentication failed');
-      }
+      console.log('Manual Google login successful, stored user:', userInfo);
 
-      console.log('Simulated Google login successful');
+      // Redirect to dashboard
+      window.location.href = '/dashboard';
     } catch (error) {
-      console.error('Simulated Google auth error:', error);
-      setError(`Simulated Google login failed: ${error.message}`);
+      console.error('Manual Google auth error:', error);
+      setError(`Manual Google login failed: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -133,31 +132,27 @@ const GoogleLoginButton = () => {
         )}
       </Button>
 
-      {showManualLogin && (
-        <div className="mt-3">
-          <Alert variant="warning">
-            <p>
-              It seems there's an issue with Google authentication. This could be due to:
-            </p>
-            <ul>
-              <li>Google OAuth not being properly configured in Supabase</li>
-              <li>Network issues preventing the authentication flow</li>
-              <li>Redirect URL issues in the Google OAuth configuration</li>
-            </ul>
-            <p>
-              You can try our simulated Google login for demonstration purposes:
-            </p>
-            <Button
-              variant="outline-primary"
-              onClick={handleManualGoogleLogin}
-              disabled={loading}
-              className="mt-2"
-            >
-              Use Simulated Google Login
-            </Button>
-          </Alert>
-        </div>
-      )}
+      <div className="mt-3">
+        <Alert variant="info">
+          <p>
+            <strong>Demo Mode Available</strong>
+          </p>
+          <p>
+            You can use our simulated Google login for demonstration purposes:
+          </p>
+          <Button
+            variant="outline-primary"
+            onClick={handleManualGoogleLogin}
+            disabled={loading}
+            className="mt-2"
+          >
+            Use Demo Login
+          </Button>
+          <p className="mt-2 small text-muted">
+            This will create a simulated user account with demo data.
+          </p>
+        </Alert>
+      </div>
     </div>
   );
 };
