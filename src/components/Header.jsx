@@ -1,94 +1,58 @@
-import React from 'react';
-import { Navbar, Container, Nav, NavDropdown, Button } from 'react-bootstrap';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Link, useNavigate } from 'react-router-dom';
-import {
-  faServer,
-  faSignOutAlt,
-  faUserCog,
-  faUserShield,
-  faUser,
-  faUsers,
-  faCog,
-  faEye
-} from '@fortawesome/free-solid-svg-icons';
-import { useAuth } from '../context/AuthContext';
-import { useEditMode } from '../context/EditModeContext';
+import React from "react";
+import { Navbar, Nav, Container, Button } from "react-bootstrap";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSignOutAlt, faUserCircle, faTachometerAlt } from "@fortawesome/free-solid-svg-icons";
+import "./Header.css"; // Assuming you will create a Header.css for specific styles
 
 const Header = () => {
-  const { currentUser, logout, isAdmin } = useAuth();
-  const { editMode, toggleEditMode } = useEditMode();
+  const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/login');
+    try {
+      await logout();
+      navigate("/login");
+    } catch (error) {
+      console.error("Failed to log out:", error);
+      // Optionally, show an error message to the user
+    }
   };
 
   return (
-    <Navbar expand="lg" className="navbar">
-      <Container>
-        <Navbar.Brand as={Link} to="/dashboard">
-          <FontAwesomeIcon icon={faServer} className="me-2" />
-          VM Management Dashboard
+    <Navbar bg="dark" variant="dark" expand="lg" sticky="top" className="app-header shadow-sm mb-3">
+      <Container fluid>
+        <Navbar.Brand as={Link} to="/dashboard" className="d-flex align-items-center">
+          <FontAwesomeIcon icon={faTachometerAlt} className="me-2" />
+          VM Dashboard
         </Navbar.Brand>
-
-        {currentUser && (
-          <>
-            <Navbar.Toggle aria-controls="basic-navbar-nav" />
-            <Navbar.Collapse id="basic-navbar-nav" className="justify-content-end">
-              <Nav>
-                {isAdmin() && (
-                  <>
-                    <Button
-                      variant={editMode ? "outline-secondary" : "outline-primary"}
-                      onClick={toggleEditMode}
-                      className="me-2 nav-button"
-                      title={editMode ? "Exit Edit Mode" : "Enter Edit Mode"}
-                      size="sm"
-                    >
-                      <FontAwesomeIcon
-                        icon={editMode ? faEye : faCog}
-                        className="me-2"
-                      />
-                      {editMode ? "View Mode" : "Settings"}
-                    </Button>
-
-                    <Nav.Link as={Link} to="/users">
-                      <FontAwesomeIcon icon={faUsers} className="me-1" />
-                      User Management
-                    </Nav.Link>
-                  </>
-                )}
-                <NavDropdown
-                  title={
-                    <span>
-                      <FontAwesomeIcon
-                        icon={isAdmin() ? faUserShield : faUser}
-                        className="me-1"
-                      />
-                      {currentUser.name}
-                    </span>
-                  }
-                  id="user-dropdown"
-                >
-                  <NavDropdown.Item as={Link} to="/profile">
-                    <FontAwesomeIcon icon={faUserCog} className="me-2" />
-                    Profile
-                  </NavDropdown.Item>
-                  <NavDropdown.Divider />
-                  <NavDropdown.Item onClick={handleLogout}>
-                    <FontAwesomeIcon icon={faSignOutAlt} className="me-2" />
-                    Logout
-                  </NavDropdown.Item>
-                </NavDropdown>
-              </Nav>
-            </Navbar.Collapse>
-          </>
-        )}
+        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+        <Navbar.Collapse id="basic-navbar-nav">
+          <Nav className="ms-auto align-items-center">
+            {currentUser && (
+              <Nav.Link as="span" className="text-light me-3">
+                <FontAwesomeIcon icon={faUserCircle} className="me-1" />
+                {currentUser.name || currentUser.email}
+              </Nav.Link>
+            )}
+            {currentUser && (
+              <Button variant="outline-light" onClick={handleLogout} size="sm">
+                <FontAwesomeIcon icon={faSignOutAlt} className="me-1" />
+                Logout
+              </Button>
+            )}
+            {!currentUser && (
+              <Nav.Link as={Link} to="/login" className="text-light">
+                Login
+              </Nav.Link>
+            )}
+          </Nav>
+        </Navbar.Collapse>
       </Container>
     </Navbar>
   );
 };
 
 export default Header;
+

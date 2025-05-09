@@ -1,684 +1,289 @@
-import React, { useState, useMemo } from 'react';
-import { Row, Col, Card, Button, Badge, Spinner, Alert, OverlayTrigger, Tooltip, Accordion, Form, InputGroup } from 'react-bootstrap';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { Row, Col, Card, Button, Table, Badge, Spinner, Alert } from "react-bootstrap";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPlus,
   faEdit,
   faTrash,
   faServer,
+  faChevronDown,
+  faChevronUp,
+  faEye,
+  faEyeSlash,
+  faLock,
   faCheck,
-  faNetworkWired,
-  faUser,
-  faKey,
-  faCopy,
-  faDesktop,
-  faLayerGroup,
-  faObjectGroup,
-  faFilter,
-  faExchangeAlt,
-  faInfoCircle
-} from '@fortawesome/free-solid-svg-icons';
-import OSBadge from './OSBadge';
-import ServiceBadge from './ServiceBadge';
-import VMModal from './VMModal';
-import VMGroupModal from './VMGroupModal';
-import BulkMoveModal from './BulkMoveModal';
-import { useAuth } from '../context/AuthContext';
-import { useEditMode } from '../context/EditModeContext';
+  faSpinner,
+  faCircle // For status indicators
+} from "@fortawesome/free-solid-svg-icons";
+import VMModal from "./VMModal";
+import ServiceDetails from "./ServiceDetails";
+// import LoadingSpinner from "./LoadingSpinner"; // Assuming this might be removed or integrated if not used elsewhere
+import { useAuth } from "../context/AuthContext";
+import "./Dashboard.css"; // Import custom CSS for Dashboard
+
+// Helper function to determine VM status and corresponding style
+const getStatusIndicator = (vm) => {
+  // Placeholder logic for VM status - this should be replaced with actual status detection
+  // For now, let"s assume a "status" property on the VM object or derive it simply.
+  // Example: "online", "offline", "warning"
+  const status = vm.status || (vm.ipAddress ? "online" : "offline"); // Simplified placeholder
+
+  switch (status) {
+    case "online":
+      return { icon: faCircle, color: "text-success", label: "Online" };
+    case "offline":
+      return { icon: faCircle, color: "text-danger", label: "Offline" };
+    case "warning":
+      return { icon: faCircle, color: "text-warning", label: "Warning" };
+    default:
+      return { icon: faCircle, color: "text-muted", label: "Unknown" };
+  }
+};
 
 const Dashboard = ({
   vms,
   serviceTypes,
-  vmGroups = [],
   onAddVM,
   onUpdateVM,
   onDeleteVM,
-  onAddGroup,
-  onUpdateGroup,
-  onDeleteGroup,
-  onMoveVMs,
   loading = false,
-  operationType = null
+  operationType = null,
+  // Simulate fetching VMs if not passed directly, or if loading state is managed here
+  // fetchVMs // Example if Dashboard fetches its own data
 }) => {
-  const [showVMModal, setShowVMModal] = useState(false);
-  const [showGroupModal, setShowGroupModal] = useState(false);
-  const [showBulkMoveModal, setShowBulkMoveModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [currentVM, setCurrentVM] = useState(null);
-  const [currentGroup, setCurrentGroup] = useState(null);
+  const [expandedVMs, setExpandedVMs] = useState({});
   const [successMessage, setSuccessMessage] = useState(null);
-  const [selectedVMs, setSelectedVMs] = useState([]);
-  const [filterGroupId, setFilterGroupId] = useState('all'); // 'all' or a group ID
-  const { isAdmin } = useAuth();
-  const { editMode } = useEditMode();
-  const navigate = useNavigate();
+  const { isAdmin } = useAuth(); // Removed currentUser as it"s not directly used here
 
-  // Filter VMs based on selected group
-  const filteredVMs = useMemo(() => {
-    if (filterGroupId === 'all') {
-      return vms;
-    } else if (filterGroupId === 'ungrouped') {
-      return vms.filter(vm => !vm.group_id);
-    } else {
-      return vms.filter(vm => vm.group_id === filterGroupId);
-    }
-  }, [vms, filterGroupId]);
-
-  // Group VMs by their group_id
-  const groupedVMs = useMemo(() => {
-    const grouped = {
-      ungrouped: []
-    };
-
-    // First add all groups as keys
-    vmGroups.forEach(group => {
-      grouped[group.id] = [];
-    });
-
-    // Then add VMs to their respective groups
-    filteredVMs.forEach(vm => {
-      if (vm.group_id && grouped[vm.group_id]) {
-        grouped[vm.group_id].push(vm);
-      } else {
-        grouped.ungrouped.push(vm);
-      }
-    });
-
-    return grouped;
-  }, [filteredVMs, vmGroups]);
-
-  // Handle VM selection for bulk operations
-  const handleVMSelection = (vm) => {
-    if (selectedVMs.some(selectedVM => selectedVM.id === vm.id)) {
-      setSelectedVMs(selectedVMs.filter(selectedVM => selectedVM.id !== vm.id));
-    } else {
-      setSelectedVMs([...selectedVMs, vm]);
-    }
-  };
-
-  // Clear all selected VMs
-  const clearSelection = () => {
-    setSelectedVMs([]);
-  };
-
-  // Handle bulk move of VMs
-  const handleBulkMove = () => {
-    if (selectedVMs.length > 0) {
-      setShowBulkMoveModal(true);
-    }
-  };
-
-  // Execute the bulk move operation
-  const executeBulkMove = async (vmIds, targetGroupId) => {
-    const success = await onMoveVMs(vmIds, targetGroupId);
-    if (success) {
-      const groupName = targetGroupId
-        ? vmGroups.find(g => g.id === targetGroupId)?.name
-        : 'Ungrouped';
-      showSuccess(`${vmIds.length} VMs moved to ${groupName}`);
-      setShowBulkMoveModal(false);
-      setSelectedVMs([]);
-    }
+  // Show success message for a short time when an operation completes
+  const showSuccess = (message) => {
+    setSuccessMessage(message);
+    setTimeout(() => setSuccessMessage(null), 3000);
   };
 
   const handleAddVM = () => {
     setCurrentVM(null);
-    setShowVMModal(true);
+    setShowModal(true);
   };
 
   const handleEditVM = (vm) => {
     setCurrentVM(vm);
-    setShowVMModal(true);
+    setShowModal(true);
   };
 
-  const handleDeleteVM = async (vmId, vmName, hostname) => {
-    if (window.confirm(`Are you sure you want to delete the VM "${vmName || hostname}"?`)) {
+  const handleDeleteVM = async (vmId, hostname) => {
+    if (window.confirm(`Are you sure you want to delete the VM "${hostname}"?`)) {
       const success = await onDeleteVM(vmId);
       if (success) {
-        showSuccess(`VM "${vmName || hostname}" was deleted successfully`);
+        showSuccess(`VM "${hostname}" was deleted successfully`);
       }
     }
   };
 
   const handleSaveVM = async (vm) => {
     let success;
+    const operation = vm.id ? "updated" : "added";
+    const loadingType = vm.id ? "update" : "add";
+
+    // Consider managing loading state specifically for save operation if needed
+    // setLoading(true); // if loading is managed within Dashboard for this action
 
     if (vm.id) {
       success = await onUpdateVM(vm);
-      if (success) {
-        showSuccess(`VM "${vm.name || vm.hostname}" was updated successfully`);
-      }
     } else {
       success = await onAddVM(vm);
-      if (success) {
-        showSuccess(`VM "${vm.name || vm.hostname}" was added successfully`);
-      }
     }
 
     if (success) {
-      setShowVMModal(false);
+      showSuccess(`VM "${vm.hostname}" was ${operation} successfully`);
+      setShowModal(false);
     }
+    // setLoading(false); // if loading is managed within Dashboard
   };
 
-  const handleAddGroup = () => {
-    setCurrentGroup(null);
-    setShowGroupModal(true);
+  const toggleExpand = (vmId) => {
+    setExpandedVMs(prev => ({
+      ...prev,
+      [vmId]: !prev[vmId]
+    }));
   };
 
-  const handleEditGroup = (group) => {
-    setCurrentGroup(group);
-    setShowGroupModal(true);
-  };
-
-  const handleDeleteGroup = async (groupId, groupName) => {
-    if (window.confirm(`Are you sure you want to delete the group "${groupName}"? VMs in this group will become ungrouped.`)) {
-      const success = await onDeleteGroup(groupId);
-      if (success) {
-        showSuccess(`Group "${groupName}" was deleted successfully`);
-      }
-    }
-  };
-
-  const handleSaveGroup = async (group) => {
-    let success;
-
-    if (group.id) {
-      success = await onUpdateGroup(group);
-      if (success) {
-        showSuccess(`Group "${group.name}" was updated successfully`);
-      }
-    } else {
-      success = await onAddGroup(group);
-      if (success) {
-        showSuccess(`Group "${group.name}" was created successfully`);
-      }
-    }
-
-    if (success) {
-      setShowGroupModal(false);
-    }
-  };
-
-  const handleServiceClick = (vmId, serviceId) => {
-    navigate(`/service/${vmId}/${serviceId}`);
-  };
-
-  const showSuccess = (message) => {
-    setSuccessMessage(message);
-    setTimeout(() => setSuccessMessage(null), 5000);
-  };
-
-  // Custom component for VM info items with tooltips and copy functionality
-  const VMInfoItem = ({ icon, value, label, isPassword = false, iconColor = "", showValue = false }) => {
-    const [copied, setCopied] = useState(false);
-
-    const renderTooltip = (props) => (
-      <Tooltip id={`tooltip-${label}`} {...props}>
-        {copied ? "Copied!" : `${label}: ${isPassword ? "••••••••" : value}`}
-      </Tooltip>
-    );
-
-    const handleCopy = async () => {
-      try {
-        await navigator.clipboard.writeText(value);
-        setCopied(true);
-
-        // Reset copied state after 2 seconds
-        setTimeout(() => {
-          setCopied(false);
-        }, 2000);
-      } catch (err) {
-        console.error('Failed to copy text: ', err);
-      }
-    };
-
+  if (loading && !vms.length) { // Show a general loading spinner if vms are being fetched initially
     return (
-      <div className="vm-info-item">
-        <OverlayTrigger
-          placement="top"
-          delay={{ show: 250, hide: 400 }}
-          overlay={renderTooltip}
-        >
-          <Button
-            variant="light"
-            size="sm"
-            className="text-secondary p-1"
-            onClick={handleCopy}
-            title={`Copy ${label}`}
-          >
-            <FontAwesomeIcon
-              icon={icon}
-              className={`me-1 ${iconColor}`}
-            />
-            {copied && <FontAwesomeIcon icon={faCheck} className="text-success ms-1" />}
-            {showValue && (
-              <span className="ms-1">
-                {isPassword ? "••••••••" : value}
-              </span>
-            )}
-          </Button>
-        </OverlayTrigger>
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "300px" }}>
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading VMs...</span>
+        </Spinner>
       </div>
     );
-  };
-
-  // VM Card Renderer Function - defined before it's used
-  const renderVMCard = (vm) => {
-    // Determine if this VM is selected
-    const isSelected = selectedVMs.some(selectedVM => selectedVM.id === vm.id);
-
-    // Get the group color if VM belongs to a group
-    const groupColor = vm.group_id
-      ? vmGroups.find(g => g.id === vm.group_id)?.color
-      : null;
-
-    return (
-      <Col key={vm.id}>
-        <Card
-          className={`vm-card h-100 ${isSelected ? 'border-primary' : ''}`}
-          style={groupColor ? { borderLeft: `4px solid ${groupColor}` } : {}}
-        >
-          <Card.Header className="d-flex justify-content-between align-items-center">
-            <div className="d-flex align-items-center">
-              {isAdmin() && editMode && (
-                <Form.Check
-                  type="checkbox"
-                  className="me-2"
-                  checked={isSelected}
-                  onChange={() => handleVMSelection(vm)}
-                  aria-label={`Select VM ${vm.name || vm.hostname}`}
-                />
-              )}
-              <FontAwesomeIcon
-                icon={faServer}
-                className="me-2"
-                style={{ color: groupColor || 'var(--bs-primary)' }}
-                size="lg"
-              />
-              <div>
-                <h5 className="mb-0">{vm.hostname}</h5>
-              </div>
-              <div className="ms-2">
-                <OSBadge os={vm.os} osVersion={vm.os_version} />
-              </div>
-            </div>
-            <div>
-              <div className="d-flex">
-                {/* Always show details button */}
-                <Button
-                  variant="link"
-                  className="p-1 me-1"
-                  onClick={() => navigate(`/vm/${vm.id}`)}
-                  title="View VM Details"
-                >
-                  <FontAwesomeIcon icon={faInfoCircle} className="text-info" />
-                </Button>
-
-                {/* Only show edit/delete buttons for admins in edit mode */}
-                {isAdmin() && editMode && (
-                  <>
-                    <Button
-                      variant="link"
-                      className="p-1 me-1"
-                      onClick={() => handleEditVM(vm)}
-                      disabled={loading}
-                      title="Edit VM"
-                    >
-                      {loading && operationType === 'update' && currentVM?.id === vm.id ? (
-                        <Spinner
-                          as="span"
-                          animation="border"
-                          size="sm"
-                          role="status"
-                          aria-hidden="true"
-                        />
-                      ) : (
-                        <FontAwesomeIcon icon={faEdit} className="text-primary" />
-                      )}
-                    </Button>
-                    <Button
-                      variant="link"
-                      className="p-1"
-                      onClick={() => handleDeleteVM(vm.id, vm.name, vm.hostname)}
-                      disabled={loading}
-                      title="Delete VM"
-                    >
-                      {loading && operationType === 'delete' && currentVM?.id === vm.id ? (
-                        <Spinner
-                          as="span"
-                          animation="border"
-                          size="sm"
-                          role="status"
-                          aria-hidden="true"
-                        />
-                      ) : (
-                        <FontAwesomeIcon icon={faTrash} className="text-danger" />
-                      )}
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
-          </Card.Header>
-          <Card.Body>
-            <div className="vm-info-grid">
-              <VMInfoItem
-                icon={faNetworkWired}
-                value={vm.ip_address}
-                label="IP Address"
-                showValue={false}
-              />
-
-              <VMInfoItem
-                icon={faUser}
-                value={vm.admin_user}
-                label="Admin User"
-                showValue={false}
-              />
-
-              <VMInfoItem
-                icon={faKey}
-                value={vm.admin_password}
-                label="Admin Password"
-                isPassword={true}
-                showValue={false}
-              />
-            </div>
-
-            <div className="mt-3">
-              <div className="d-flex align-items-center mb-2">
-                <FontAwesomeIcon icon={faServer} className="me-2 text-secondary" />
-                <strong>Services</strong>
-              </div>
-              <div className="service-badges">
-                {vm.services.map(service => (
-                  <div
-                    key={service.id}
-                    onClick={() => handleServiceClick(vm.id, service.id)}
-                    className="service-badge-wrapper"
-                  >
-                    <ServiceBadge name={service.name} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Card.Body>
-          <Card.Footer className="bg-white text-center">
-            <small className="text-muted">
-              Click <FontAwesomeIcon icon={faInfoCircle} className="text-info mx-1" /> to view VM details or
-              click on a service icon to view service details
-            </small>
-          </Card.Footer>
-        </Card>
-      </Col>
-    );
-  };
+  }
 
   return (
-    <div>
+    <div className="dashboard-container p-3">
       {successMessage && (
-        <Alert variant="success" className="mb-4" dismissible onClose={() => setSuccessMessage(null)}>
+        <Alert variant="success" onClose={() => setSuccessMessage(null)} dismissible className="position-fixed top-0 end-0 m-3" style={{ zIndex: 1050 }}>
+          <FontAwesomeIcon icon={faCheck} className="me-2" />
           {successMessage}
         </Alert>
       )}
 
-      <Row className="mb-4">
+      <Row className="mb-4 align-items-center">
         <Col>
-          <h2>VM Inventory</h2>
+          <h2 className="dashboard-title">VM Inventory</h2>
         </Col>
         <Col xs="auto">
-          {isAdmin() && editMode && (
-            <div className="d-flex">
-              <Button
-                variant="outline-primary"
-                onClick={handleAddGroup}
-                disabled={loading && operationType === 'add_group'}
-                className="me-2"
-              >
-                {loading && operationType === 'add_group' ? (
-                  <>
-                    <Spinner
-                      as="span"
-                      animation="border"
-                      size="sm"
-                      role="status"
-                      aria-hidden="true"
-                      className="me-2"
-                    />
-                    Adding Group...
-                  </>
-                ) : (
-                  <>
-                    <FontAwesomeIcon icon={faLayerGroup} className="me-2" />
-                    Add Group
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="primary"
-                onClick={handleAddVM}
-                disabled={loading && operationType === 'add'}
-              >
-                {loading && operationType === 'add' ? (
-                  <>
-                    <Spinner
-                      as="span"
-                      animation="border"
-                      size="sm"
-                      role="status"
-                      aria-hidden="true"
-                      className="me-2"
-                    />
-                    Adding VM...
-                  </>
-                ) : (
-                  <>
-                    <FontAwesomeIcon icon={faPlus} className="me-2" />
-                    Add VM
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
-        </Col>
-      </Row>
-
-      {/* Filter and Bulk Actions */}
-      <Row className="mb-4">
-        <Col md={6}>
-          <Form.Group>
-            <InputGroup>
-              <InputGroup.Text>
-                <FontAwesomeIcon icon={faFilter} className="me-2" />
-                Filter by Group
-              </InputGroup.Text>
-              <Form.Select
-                value={filterGroupId}
-                onChange={(e) => setFilterGroupId(e.target.value)}
-              >
-                <option value="all">All VMs</option>
-                <option value="ungrouped">Ungrouped VMs</option>
-                {vmGroups.map(group => (
-                  <option key={group.id} value={group.id}>
-                    {group.name}
-                  </option>
-                ))}
-              </Form.Select>
-            </InputGroup>
-          </Form.Group>
-        </Col>
-        <Col md={6} className="d-flex justify-content-end align-items-center">
-          {isAdmin() && editMode && selectedVMs.length > 0 && (
-            <div className="d-flex align-items-center">
-              <Badge bg="primary" className="me-2">
-                {selectedVMs.length} VM{selectedVMs.length !== 1 ? 's' : ''} selected
-              </Badge>
-              <Button
-                variant="outline-secondary"
-                size="sm"
-                onClick={clearSelection}
-                className="me-2"
-              >
-                Clear
-              </Button>
-              <Button
-                variant="outline-primary"
-                size="sm"
-                onClick={handleBulkMove}
-              >
-                <FontAwesomeIcon icon={faExchangeAlt} className="me-2" />
-                Move to Group
-              </Button>
-            </div>
-          )}
-        </Col>
-      </Row>
-
-      {vms.length === 0 ? (
-        <Card className="text-center p-5">
-          <Card.Body>
-            <FontAwesomeIcon icon={faServer} className="text-muted mb-3" size="4x" />
-            <h4>No VMs Available</h4>
-            {isAdmin() ? (
-              <>
-                <p>There are no virtual machines in the system or we couldn't retrieve them.</p>
-                <p>You can add a new VM by clicking the "Add VM" button above.</p>
-                <Button
-                  variant="primary"
-                  onClick={handleAddVM}
-                  className="mt-3"
-                >
+          {isAdmin() && (
+            <Button
+              variant="primary"
+              onClick={handleAddVM}
+              disabled={loading && operationType === "add"}
+              className="add-vm-button"
+            >
+              {loading && operationType === "add" ? (
+                <>
+                  <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
+                  Adding...
+                </>
+              ) : (
+                <>
                   <FontAwesomeIcon icon={faPlus} className="me-2" />
-                  Add Your First VM
-                </Button>
-              </>
+                  Add VM
+                </>
+              )}
+            </Button>
+          )}
+        </Col>
+      </Row>
+
+      {vms.length === 0 && !loading ? (
+        <Card className="text-center p-4 shadow-sm">
+          <Card.Body>
+            <FontAwesomeIcon icon={faServer} size="3x" className="text-muted mb-3" />
+            <h4>No Virtual Machines Found</h4>
+            {isAdmin() ? (
+                <p>Click the "Add VM" button to get started.</p>
             ) : (
-              <>
-                <p>There are no virtual machines available or we couldn't retrieve them.</p>
-                <p>Please contact your administrator if you believe this is an error.</p>
-              </>
+                <p>There are currently no VMs to display.</p>
             )}
           </Card.Body>
         </Card>
       ) : (
-        <div>
-          {/* Display VM Groups */}
-          {vmGroups.length > 0 && (
-            <Accordion defaultActiveKey={vmGroups.map(g => g.id)} className="mb-4" alwaysOpen>
-              {vmGroups.map(group => {
-                const groupVMs = filteredVMs.filter(vm => vm.group_id === group.id);
-                if (groupVMs.length === 0 && filterGroupId !== 'all' && filterGroupId !== group.id) return null;
-
+        <Card className="shadow-sm vm-table-card">
+          <Table responsive hover className="vm-table">
+            <thead className="table-light">
+              <tr>
+                <th className="text-center">Status</th>
+                <th>Hostname</th>
+                <th>IP Address</th>
+                <th>OS</th>
+                <th>Admin User</th>
+                <th>Services</th>
+                {isAdmin() && <th className="text-center">Actions</th>}
+                <th className="text-center">Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {vms.map((vm, index) => {
+                const statusInfo = getStatusIndicator(vm);
                 return (
-                  <Accordion.Item key={group.id} eventKey={group.id}>
-                    <Accordion.Header>
-                      <div className="d-flex align-items-center justify-content-between w-100 me-3">
-                        <div className="d-flex align-items-center">
-                          <FontAwesomeIcon
-                            icon={faObjectGroup}
-                            className="me-2"
-                            style={{ color: group.color || 'var(--bs-primary)' }}
-                          />
-                          <span className="fw-bold">{group.name}</span>
-                          <Badge
-                            pill
-                            style={{
-                              backgroundColor: group.color || 'var(--bs-secondary)',
-                            }}
-                            className="ms-2"
-                          >
-                            {groupVMs.length} VMs
-                          </Badge>
-                          {group.description && (
-                            <small className="text-muted ms-2">
-                              {group.description}
-                            </small>
-                          )}
-                        </div>
-                        {isAdmin() && editMode && (
-                          <div className="d-flex" onClick={e => e.stopPropagation()}>
-                            <Button
-                              variant="link"
-                              className="p-1 me-1"
-                              onClick={() => handleEditGroup(group)}
-                              disabled={loading}
-                              title="Edit Group"
-                            >
-                              <FontAwesomeIcon icon={faEdit} className="text-primary" />
-                            </Button>
-                            <Button
-                              variant="link"
-                              className="p-1"
-                              onClick={() => handleDeleteGroup(group.id, group.name)}
-                              disabled={loading}
-                              title="Delete Group"
-                            >
-                              <FontAwesomeIcon icon={faTrash} className="text-danger" />
-                            </Button>
-                          </div>
+                  <React.Fragment key={vm.id}>
+                    <tr className={`vm-row ${index % 2 === 0 ? "even-row" : "odd-row"}`}>
+                      <td className="text-center align-middle">
+                        <FontAwesomeIcon icon={statusInfo.icon} className={`${statusInfo.color} me-1`} title={statusInfo.label} />
+                        <span className="visually-hidden">{statusInfo.label}</span>
+                      </td>
+                      <td className="align-middle">
+                        <FontAwesomeIcon icon={faServer} className="me-2 text-primary" />
+                        <strong>{vm.hostname}</strong>
+                      </td>
+                      <td className="align-middle">{vm.ipAddress || "-"}</td>
+                      <td className="align-middle">{vm.os || "N/A"}</td>
+                      <td className="align-middle">{vm.adminUser || "-"}</td>
+                      <td className="align-middle services-cell">
+                        {vm.services && vm.services.length > 0 ? (
+                            vm.services.map(service => service.name).join(", ")
+                        ) : (
+                            <span className="text-muted">No services</span>
                         )}
-                      </div>
-                    </Accordion.Header>
-                    <Accordion.Body>
-                      {groupVMs.length === 0 ? (
-                        <Alert variant="info">
-                          No VMs in this group match the current filter.
-                        </Alert>
-                      ) : (
-                        <Row xs={1} md={2} lg={3} className="g-4">
-                          {groupVMs.map(vm => renderVMCard(vm))}
-                        </Row>
+                      </td>
+                      {isAdmin() && (
+                        <td className="text-center align-middle actions-cell">
+                          <Button
+                            variant="outline-primary"
+                            size="sm"
+                            className="me-1 action-button"
+                            onClick={() => handleEditVM(vm)}
+                            disabled={loading && operationType === "update" && currentVM?.id === vm.id}
+                            title="Edit VM"
+                          >
+                            {loading && operationType === "update" && currentVM?.id === vm.id ? (
+                              <Spinner as="span" animation="border" size="sm" />
+                            ) : (
+                              <FontAwesomeIcon icon={faEdit} />
+                            )}
+                          </Button>
+                          <Button
+                            variant="outline-danger"
+                            size="sm"
+                            className="action-button"
+                            onClick={() => handleDeleteVM(vm.id, vm.hostname)}
+                            disabled={loading && operationType === "delete" && currentVM?.id === vm.id}
+                            title="Delete VM"
+                          >
+                            {loading && operationType === "delete" && currentVM?.id === vm.id ? (
+                              <Spinner as="span" animation="border" size="sm" />
+                            ) : (
+                              <FontAwesomeIcon icon={faTrash} />
+                            )}
+                          </Button>
+                        </td>
                       )}
-                    </Accordion.Body>
-                  </Accordion.Item>
+                      <td className="text-center align-middle">
+                        <Button
+                          variant="link"
+                          size="sm"
+                          onClick={() => toggleExpand(vm.id)}
+                          aria-expanded={expandedVMs[vm.id] || false}
+                          aria-controls={`vm-details-${vm.id}`}
+                          title={expandedVMs[vm.id] ? "Hide Details" : "Show Details"}
+                          className="details-button"
+                        >
+                          <FontAwesomeIcon icon={expandedVMs[vm.id] ? faChevronUp : faChevronDown} />
+                        </Button>
+                      </td>
+                    </tr>
+                    {expandedVMs[vm.id] && (
+                      <tr id={`vm-details-${vm.id}`} className="vm-details-row">
+                        <td colSpan={isAdmin() ? 8 : 7} className="p-0">
+                          <div className="vm-details-container p-3">
+                            <ServiceDetails vm={vm} serviceTypes={serviceTypes} />
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 );
               })}
-            </Accordion>
-          )}
-
-          {/* Display Ungrouped VMs */}
-          {(filterGroupId === 'all' || filterGroupId === 'ungrouped') && (
-            <div className="mb-4">
-              <h5 className="mb-3">
-                <FontAwesomeIcon icon={faServer} className="me-2 text-secondary" />
-                Ungrouped VMs
-              </h5>
-              <Row xs={1} md={2} lg={3} className="g-4">
-                {filteredVMs.filter(vm => !vm.group_id).map(vm => renderVMCard(vm))}
-              </Row>
-            </div>
-          )}
-        </div>
+            </tbody>
+          </Table>
+        </Card>
       )}
 
-      <VMModal
-        show={showVMModal}
-        onHide={() => setShowVMModal(false)}
-        vm={currentVM}
-        serviceTypes={serviceTypes}
-        vmGroups={vmGroups}
-        onSave={handleSaveVM}
-        loading={loading}
-      />
-
-      <VMGroupModal
-        show={showGroupModal}
-        onHide={() => setShowGroupModal(false)}
-        group={currentGroup}
-        onSave={handleSaveGroup}
-        loading={loading}
-      />
-
-      <BulkMoveModal
-        show={showBulkMoveModal}
-        onHide={() => setShowBulkMoveModal(false)}
-        selectedVMs={selectedVMs}
-        vmGroups={vmGroups}
-        onMove={executeBulkMove}
-        loading={loading && operationType === 'move_vms'}
-      />
+      {showModal && (
+        <VMModal
+          show={showModal}
+          onHide={() => setShowModal(false)}
+          vm={currentVM}
+          serviceTypes={serviceTypes}
+          onSave={handleSaveVM}
+          loading={loading && (operationType === "add" || operationType === "update")}
+        />
+      )}
     </div>
   );
 };
 
 export default Dashboard;
+

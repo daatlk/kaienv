@@ -1,0 +1,118 @@
+/* Dashboard.css */
+
+.dashboard-container {
+  background-color: #ffffff; /* White background for the main content area */
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-title {
+  color: #343a40; /* Darker heading color */
+  margin-bottom: 1.5rem;
+}
+
+.add-vm-button {
+  font-weight: 500;
+}
+
+.vm-table-card {
+  border: none; /* Remove default card border if table is primary element */
+}
+
+.vm-table thead th {
+  background-color: #e9ecef; /* Light gray for table header */
+  color: #495057;
+  border-bottom-width: 2px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.85em;
+}
+
+.vm-table tbody tr:hover {
+  background-color: #f8f9fa; /* Subtle hover for table rows */
+}
+
+.vm-row.even-row {
+  background-color: #ffffff;
+}
+
+.vm-row.odd-row {
+  background-color: #f9f9f9; /* Alternating row color */
+}
+
+.vm-table td,
+.vm-table th {
+  padding: 0.9rem 0.75rem; /* Consistent padding for table cells */
+  vertical-align: middle;
+}
+
+.services-cell {
+  max-width: 250px; /* Limit width of services cell */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.services-cell:hover {
+  white-space: normal;
+  overflow: visible;
+}
+
+.actions-cell .action-button {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.9em;
+}
+
+.details-button {
+  color: #007bff;
+  padding: 0.2rem 0.4rem;
+}
+
+.details-button:hover {
+  color: #0056b3;
+  background-color: #e9ecef;
+}
+
+.vm-details-row td {
+  background-color: #fdfdfd; /* Slightly different background for expanded details */
+  border-top: 2px solid #007bff; /* Accent border for details section */
+}
+
+.vm-details-container {
+  background-color: #ffffff;
+  border-radius: 0 0 4px 4px;
+}
+
+/* Status Indicator Specific Styles */
+.text-success {
+  color: #28a745 !important; /* Ensure Bootstrap success color is used */
+}
+
+.text-danger {
+  color: #dc3545 !important; /* Ensure Bootstrap danger color is used */
+}
+
+.text-warning {
+  color: #ffc107 !important; /* Ensure Bootstrap warning color is used */
+}
+
+.text-muted {
+  color: #6c757d !important; /* Ensure Bootstrap muted color is used */
+}
+
+/* Responsive adjustments if needed */
+@media (max-width: 768px) {
+  .dashboard-title {
+    font-size: 1.5rem;
+  }
+  .vm-table {
+    font-size: 0.9em;
+  }
+  .vm-table td,
+  .vm-table th {
+    padding: 0.6rem 0.5rem;
+  }
+}
+
