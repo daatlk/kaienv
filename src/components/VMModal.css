@@ -1,0 +1,115 @@
+/* VMModal.css */
+
+.vm-modal .modal-header {
+  border-bottom: none;
+  padding: 1rem 1.5rem;
+}
+
+.vm-modal .modal-header .modal-title {
+  font-weight: 600;
+}
+
+.vm-modal .modal-body {
+  padding: 1.5rem;
+}
+
+.vm-modal .form-section-title {
+  color: #495057;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem !important; /* Override Bootstrap if needed */
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.vm-modal .form-label {
+  font-weight: 500;
+  color: #495057;
+  margin-bottom: 0.3rem;
+}
+
+.vm-modal .form-control,
+.vm-modal .form-select {
+  border-radius: 0.25rem;
+  border: 1px solid #ced4da;
+  padding: 0.5rem 0.75rem;
+}
+
+.vm-modal .form-control:focus,
+.vm-modal .form-select:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.vm-modal .input-group .btn {
+  border-color: #ced4da;
+}
+
+.vm-modal .services-card {
+  margin-top: 1.5rem;
+  border: 1px solid #e0e0e0;
+}
+
+.vm-modal .services-card .card-header {
+  background-color: #f8f9fa;
+  padding: 0.75rem 1.25rem;
+}
+
+.vm-modal .services-card .card-header h6 {
+  font-weight: 600;
+}
+
+.vm-modal .add-service-button {
+  font-weight: 500;
+}
+
+.vm-modal .service-list-item {
+  padding: 0.75rem 1.25rem;
+}
+
+.vm-modal .service-list-item strong {
+  color: #333;
+}
+
+.vm-modal .service-list-item .text-muted {
+  font-size: 0.85em;
+}
+
+.vm-modal .modal-footer {
+  border-top: 1px solid #e9ecef;
+  padding: 1rem 1.5rem;
+}
+
+.vm-modal .save-vm-button {
+  min-width: 120px; /* Ensure save button has a decent width */
+}
+
+/* Ensure validation feedback is styled appropriately */
+.was-validated .form-control:invalid,
+.form-control.is-invalid {
+  border-color: #dc3545;
+  background-image: none; /* Remove default Bootstrap icon if custom styling is preferred */
+}
+
+.was-validated .form-control:valid,
+.form-control.is-valid {
+  border-color: #198754;
+  background-image: none;
+}
+
+.invalid-feedback {
+  display: block; /* Ensure feedback is shown */
+  width: 100%;
+  margin-top: .25rem;
+  font-size: .875em;
+  color: #dc3545;
+}
+
+.valid-feedback {
+  display: block;
+  width: 100%;
+  margin-top: .25rem;
+  font-size: .875em;
+  color: #198754;
+}
+

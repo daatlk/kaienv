@@ -1,0 +1,36 @@
+/* Header.css */
+
+.app-header {
+  background-color: #343a40 !important; /* Dark background for header */
+}
+
+.app-header .navbar-brand {
+  font-weight: 600;
+  color: #ffffff !important;
+}
+
+.app-header .navbar-brand:hover {
+  color: #e9ecef !important;
+}
+
+.app-header .nav-link {
+  color: #adb5bd !important; /* Lighter text for nav links */
+  font-weight: 500;
+}
+
+.app-header .nav-link:hover,
+.app-header .nav-link.active {
+  color: #ffffff !important;
+}
+
+.app-header .btn-outline-light {
+  border-color: #adb5bd;
+  color: #adb5bd;
+}
+
+.app-header .btn-outline-light:hover {
+  border-color: #ffffff;
+  background-color: #ffffff;
+  color: #343a40;
+}
+
