@@ -75,19 +75,26 @@ const Login = () => {
       setError('');
       setLoading(true);
 
+      console.log('Login attempt with email:', email);
+
       // Attempt to log in with Supabase
       const success = await login(email, password);
 
+      console.log('Login result:', success);
+
       if (!success) {
-        throw new Error('Invalid email or password');
+        console.error('Login failed - success is falsy');
+        throw new Error('Invalid email or password. Please try again or use the demo credentials below.');
       }
 
-      // Redirect will happen in the useEffect
+      // Redirect will happen automatically since we update currentUser
+      console.log('Login successful, waiting for redirect');
     } catch (error) {
-      setError(error.message);
+      console.error('Login error:', error);
+      setError(error.message || 'Authentication failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
 

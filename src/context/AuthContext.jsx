@@ -7,6 +7,7 @@ import {
   updateUser,
   getUserProfile
 } from '../utils/supabaseClient';
+import { fallbackAuthenticate, shouldUseFallbackAuth } from '../utils/fallbackAuth';
 
 // Create the authentication context
 const AuthContext = createContext();
@@ -22,34 +23,62 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     // Check if user is logged in
     const checkSession = async () => {
-      const { data, error } = await getSession();
+      console.log("Checking authentication session...");
+      setLoading(true);
 
-      if (data?.session?.user) {
-        // Get user profile to get the role
-        const { data: profileData } = await getUserProfile(data.session.user.id);
+      try {
+        // First check if we have a user in localStorage
+        const storedUser = localStorage.getItem('currentUser');
+        if (storedUser) {
+          try {
+            const parsedUser = JSON.parse(storedUser);
+            console.log("Found user in localStorage:", parsedUser);
+            setCurrentUser(parsedUser);
+            setLoading(false);
+            return;
+          } catch (e) {
+            console.error("Error parsing stored user:", e);
+            localStorage.removeItem('currentUser');
+          }
+        }
 
-        // Check if this is a Google-authenticated user
-        const isGoogleUser = data.session.user.app_metadata?.provider === 'google';
+        // If no user in localStorage, check Supabase session
+        const { data, error } = await getSession();
 
-        setCurrentUser({
-          id: data.session.user.id,
-          email: data.session.user.email,
-          name: profileData?.name || data.session.user.user_metadata?.name || data.session.user.email,
-          role: profileData?.role || data.session.user.user_metadata?.role || 'user',
-          authProvider: isGoogleUser ? 'google' : 'email',
-          picture: data.session.user.user_metadata?.avatar_url
-        });
+        if (error) {
+          console.error("Error getting session:", error);
+          setLoading(false);
+          return;
+        }
 
-        console.log("Session user:", {
-          id: data.session.user.id,
-          email: data.session.user.email,
-          name: profileData?.name || data.session.user.user_metadata?.name,
-          role: profileData?.role || data.session.user.user_metadata?.role,
-          authProvider: isGoogleUser ? 'google' : 'email'
-        });
+        if (data?.session?.user) {
+          // Get user profile to get the role
+          const { data: profileData } = await getUserProfile(data.session.user.id);
+
+          // Check if this is a Google-authenticated user
+          const isGoogleUser = data.session.user.app_metadata?.provider === 'google';
+
+          const userObj = {
+            id: data.session.user.id,
+            email: data.session.user.email,
+            name: profileData?.name || data.session.user.user_metadata?.name || data.session.user.email,
+            role: profileData?.role || data.session.user.user_metadata?.role || 'user',
+            authProvider: isGoogleUser ? 'google' : 'email',
+            picture: data.session.user.user_metadata?.avatar_url
+          };
+
+          setCurrentUser(userObj);
+
+          // Also store in localStorage for persistence
+          localStorage.setItem('currentUser', JSON.stringify(userObj));
+
+          console.log("Session user:", userObj);
+        }
+      } catch (e) {
+        console.error("Unexpected error in checkSession:", e);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
     checkSession();
@@ -57,6 +86,12 @@ export const AuthProvider = ({ children }) => {
 
   // Login function
   const login = async (email, password, authProvider = 'email', additionalInfo = {}) => {
+    console.log(`Login attempt - Email: ${email}, Auth Provider: ${authProvider}`);
+
+    // Check if we should use fallback authentication
+    const useFallback = shouldUseFallbackAuth();
+    console.log(`Using fallback authentication: ${useFallback}`);
+
     if (authProvider === 'google') {
       // Handle Google authentication as a fallback
       // This is used when Supabase Google auth is not fully configured
@@ -88,36 +123,107 @@ export const AuthProvider = ({ children }) => {
         return false;
       }
     } else {
-      // Regular email/password authentication
-      // Sign in using Supabase client
-      const { data, error } = await signIn(email, password);
+      // Try fallback authentication first if enabled
+      if (useFallback) {
+        console.log("Attempting fallback authentication first");
+        const fallbackResult = fallbackAuthenticate(email, password);
 
-      if (error) {
-        console.error("Login error:", error);
+        if (fallbackResult.success) {
+          console.log("Fallback authentication successful:", fallbackResult.user);
+
+          // Store user in state
+          setCurrentUser(fallbackResult.user);
+
+          // Also store in localStorage for persistence
+          localStorage.setItem('currentUser', JSON.stringify(fallbackResult.user));
+
+          return true;
+        }
+
+        console.log("Fallback authentication failed, trying Supabase");
+      }
+
+      // Regular email/password authentication
+      console.log("Attempting email/password authentication with Supabase");
+
+      try {
+        // Sign in using Supabase client
+        const { data, error } = await signIn(email, password);
+
+        console.log("Supabase signIn response:", { data, error });
+
+        if (error) {
+          console.error("Login error from Supabase:", error);
+
+          // If Supabase auth fails, try fallback auth as a last resort
+          if (!useFallback) {
+            console.log("Supabase auth failed, trying fallback as last resort");
+            const fallbackResult = fallbackAuthenticate(email, password);
+
+            if (fallbackResult.success) {
+              console.log("Last resort fallback authentication successful:", fallbackResult.user);
+
+              // Store user in state
+              setCurrentUser(fallbackResult.user);
+
+              // Also store in localStorage for persistence
+              localStorage.setItem('currentUser', JSON.stringify(fallbackResult.user));
+
+              return true;
+            }
+          }
+
+          return false;
+        }
+
+        if (data?.user) {
+          // Get user profile to get the role
+          const { data: profileData } = await getUserProfile(data.user.id);
+
+          // Create a user object
+          const authenticatedUser = {
+            id: data.user.id,
+            email: data.user.email,
+            role: profileData?.role || data.user.user_metadata?.role || 'user',
+            name: profileData?.name || data.user.user_metadata?.name || data.user.email,
+            authProvider: 'email'
+          };
+
+          console.log("Authenticated user:", authenticatedUser);
+
+          // Store user in state
+          setCurrentUser(authenticatedUser);
+
+          // Also store in localStorage for persistence
+          localStorage.setItem('currentUser', JSON.stringify(authenticatedUser));
+
+          return true;
+        }
+
+        return false;
+      } catch (error) {
+        console.error("Unexpected authentication error:", error);
+
+        // Try fallback authentication as a last resort
+        if (!useFallback) {
+          console.log("Unexpected error, trying fallback as last resort");
+          const fallbackResult = fallbackAuthenticate(email, password);
+
+          if (fallbackResult.success) {
+            console.log("Last resort fallback authentication successful:", fallbackResult.user);
+
+            // Store user in state
+            setCurrentUser(fallbackResult.user);
+
+            // Also store in localStorage for persistence
+            localStorage.setItem('currentUser', JSON.stringify(fallbackResult.user));
+
+            return true;
+          }
+        }
+
         return false;
       }
-
-      if (data?.user) {
-        // Get user profile to get the role
-        const { data: profileData } = await getUserProfile(data.user.id);
-
-        // Create a user object
-        const authenticatedUser = {
-          id: data.user.id,
-          email: data.user.email,
-          role: profileData?.role || data.user.user_metadata?.role || 'user',
-          name: profileData?.name || data.user.user_metadata?.name || data.user.email,
-          authProvider: 'email'
-        };
-
-        console.log("Authenticated user:", authenticatedUser);
-
-        // Store user in state
-        setCurrentUser(authenticatedUser);
-        return true;
-      }
-
-      return false;
     }
   };
 
