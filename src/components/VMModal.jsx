@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Form, Row, Col, Card, ListGroup, InputGroup, Spinner, Alert } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faTrash, faEye, faEyeSlash, faKey, faSave, faServer, faNetworkWired, faUserShield, faDesktop, faListAlt } from "@fortawesome/free-solid-svg-icons";
+import { faPlus, faTrash, faEye, faEyeSlash, faKey, faSave, faServer, faNetworkWired, faUserShield, faDesktop, faListAlt, faEdit } from "@fortawesome/free-solid-svg-icons";
 import ServiceForm from "./ServiceForm";
 // import { useAuth } from "../context/AuthContext"; // Not directly used for isAdmin checks here, can be removed if not needed for other purposes
 import "./VMModal.css"; // Import custom CSS for VMModal

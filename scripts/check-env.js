@@ -5,6 +5,10 @@
  * It's used in the GitHub Actions workflow to ensure the build will succeed
  */
 
+// Load environment variables from .env file
+import dotenv from 'dotenv';
+dotenv.config();
+
 const requiredEnvVars = [
   'VITE_SUPABASE_URL',
   'VITE_SUPABASE_ANON_KEY'

@@ -1,0 +1,45 @@
+/* VMModal.css - Styles for the VM Modal component */
+
+.vm-modal .modal-content {
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.vm-modal .modal-header {
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+}
+
+.vm-modal .form-section-title {
+  color: #495057;
+  font-weight: 600;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e9ecef;
+  margin-bottom: 1.5rem;
+}
+
+.vm-modal .services-card {
+  margin-top: 1.5rem;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+}
+
+.vm-modal .service-list-item {
+  transition: background-color 0.2s;
+}
+
+.vm-modal .service-list-item:hover {
+  background-color: #f8f9fa;
+}
+
+.vm-modal .action-button {
+  padding: 0.25rem 0.5rem;
+}
+
+.vm-modal .add-service-button {
+  font-weight: 500;
+}
+
+.vm-modal .save-vm-button {
+  font-weight: 500;
+}
